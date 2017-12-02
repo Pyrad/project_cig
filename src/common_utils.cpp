@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
+#include <sstream>
 
 #include "common_utils.hpp"
 
@@ -236,6 +237,26 @@ void print_array(const int *a, int s) {
 	std::cout << std::endl;
 }
 
+void print_char_array(char* arr, const int size, bool separator) {
+	if(!arr) {
+		printf("(Array might be empty\n)");
+		return ;
+	}
+	if(size < 0) {
+		printf("Error array size\n");
+		return ;
+	}
+
+	for(int i = 0; i < size; i++) {
+		if(separator) {
+			printf("%c ", arr[i]);
+		} else {
+			printf("%c", arr[i]);
+		}
+	}
+	printf("\n");
+}
+
 void print_string_vector(const std::vector<std::string>& svec) {
     for(std::vector<std::string>::const_iterator itr = svec.begin(); itr != svec.end(); itr++) {
         std::cout << *itr << " ";
@@ -436,6 +457,58 @@ void print_matrix(const int& r, const int& c, T** m) {
         std::cout << std::endl;
     }
 }
+
+
+
+const std::string int_to_string(const int num) {
+	std::stringstream ss;
+	ss << num;
+	std::string nstr(ss.str());
+
+	return nstr;
+}
+
+
+char* convert_to_chars(const std::string& str, int& size) {
+	printf("Need to delete the array returned after use\n");
+	if(str.empty()) {
+		size = 0;
+		return NULL;
+	}
+
+	std::size_t len = str.size();
+	size = len;
+	char *chars = new char[len];
+	for(std::size_t i = 0; i < len; i++) {
+		chars[i] = str[i];
+	}
+
+	return chars;
+}
+
+
+std::vector<std::string> convert_to_string_vector(const std::string ss[], const int size) {
+	if(size <= 0) {
+		return std::vector<std::string>();
+	}
+
+	std::vector<std::string> svec;
+	for(int i = 0; i < size; i++) {
+		svec.push_back(ss[i]);
+	}
+	return svec;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

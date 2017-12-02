@@ -7,9 +7,36 @@
 //============================================================================
 
 #include <iostream>
+#include <stdio.h>
+#include <limits.h>
 // using namespace std;
+
+
+#include "chapter_5_tests.hpp"
 
 int main() {
 	std::cout << "Greetings" << std::endl; // prints Greetings
+
+	// Tests in chapter 1
+	// Tests in chapter 2
+	// Tests in chapter 3
+	// Tests in chapter 4
+
+	// Tests in chapter 5
+	C5::test_5_1();
+	C5::test_5_2();
+	C5::test_5_3();
+	C5::test_5_4();
+	C5::test_5_5();
+	// C5::test_5_6();
+	C5::test_5_7_1();
+	C5::test_5_7_2();
+	C5::test_5_8();
+	C5::test_5_9_1();
+	C5::test_5_9_2();
+	C5::test_5_10();
+	C5::test_5_11_1();
+
+
 	return 0;
 }

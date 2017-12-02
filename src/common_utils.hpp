@@ -144,6 +144,7 @@ int gen_random_int_4(const int& a, const int& b);
 //
 // ****************************************
 void print_array(const int *a, int s);
+void print_char_array(char* arr, const int size, bool separator = true);
 
 void print_string_vector(const std::vector<std::string>& svec);
 
@@ -177,6 +178,38 @@ int list_length(lnode* h);
 lnode* remove_a_node_from_linked_list(lnode *head, lnode *n);
 
 lnode* find_min_node(lnode *head);
+
+
+
+
+
+
+
+// ****************************************
+//
+// Conversions
+//
+// ****************************************
+const std::string int_to_string(const int num);
+
+char* convert_to_chars(const std::string& str, int& size);
+
+std::vector<std::string> convert_to_string_vector(const std::string ss[], const int size);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 } // namespace common_utils
 
