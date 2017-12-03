@@ -18,6 +18,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_io.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <stdio.h>
 #include <math.h>
@@ -31,6 +32,7 @@
 #include <cstring>
 #include <map>
 #include <set>
+#include <algorithm>
 
 #include "common_utils.hpp"
 
@@ -682,19 +684,629 @@ int min_dist_two_strings_in_string_array(const std::vector<std::string>& svec, c
 	}
 }
 
+// (2) Query many times
+class records_relation {
+public:
+	records_relation(const std::vector<std::string>& strs) { init(strs); }
+	~records_relation() { m_records.clear(); }
+public:
+	void query_min_distance(const std::vector<std::pair<std::string, std::string> >& strs, std::vector<int>& res);
+	int query_min_distance(const std::string& str1, const std::string& str2);
+private:
+	void init(const std::vector<std::string>& strs);
+	void update(const std::string& str, std::map<std::string, int>& idxmap, int cur_index);
+private:
+	std::map<std::string, std::map<std::string, int> > m_records;
+};
 
+void records_relation::
+update(const std::string& str, std::map<std::string, int>& idxmap, int cur_index) {
+	if(m_records.find(str) == m_records.end()) {
+		std::map<std::string, int> m;
+		m_records.insert(std::make_pair(str, m));
+	}
+	// typedef std::pair<std::string, std::map<std::string, int> > vpair;
+	std::map<std::string, std::map<std::string, int> >::iterator itr(m_records.find(str));
+	typedef std::pair<std::string, int> mpair;
+	BOOST_FOREACH(const mpair& kv, idxmap) {
+		const std::string& s = kv.first;
+		int pos = kv.second;
+		if(s != str) {
+			if(m_records.find(s)== m_records.end()) {
+				std::map<std::string, int> m;
+				m_records.insert(std::make_pair(s, m));
+			}
+			std::map<std::string, std::map<std::string, int> >::iterator ii(m_records.find(s));
+			int cur_dist = cur_index - pos;
+			std::map<std::string, int>::iterator j = itr->second.find(s);
+			if(j != itr->second.end()) {
+				int min_dist = j->second;
+				if(cur_dist < min_dist) {
+					(itr->second)[s] = cur_dist;
+					(ii->second)[str] = cur_dist;
+				}
+			} else {
+				(itr->second)[s] = cur_dist;
+				(ii->second)[str] = cur_dist;
+			}
+		}
+	}
+}
 
+void records_relation::
+init(const std::vector<std::string>& strs) {
+	std::map<std::string, int> nearest_index_map;
+	const int len = strs.size();
+	for(int i = 0; i < len; i++) {
+		const std::string& s = strs[i];
+		update(s, nearest_index_map, i);
+		nearest_index_map[s] = i; // update each string's latest index
+	}
+}
 
+int records_relation::
+query_min_distance(const std::string& str1, const std::string& str2) {
+	if(str1.empty() || str2.empty()) {
+		return -1;
+	}
+
+	if(str1 == str2) {
+		return 0;
+	}
+
+	std::map<std::string, std::map<std::string, int> >::iterator itr(m_records.find(str1));
+	if(itr != m_records.end()) {
+		std::map<std::string, int>::iterator ii(itr->second.find(str2));
+		if(ii != itr->second.end()) {
+			return ii->second;
+		}
+	}
+
+	return -1;
+}
+
+void records_relation::
+query_min_distance(const std::vector<std::pair<std::string, std::string> >& strs, std::vector<int>& res) {
+	typedef std::pair<std::string, std::string> spair;
+	res.clear();
+	BOOST_FOREACH(const spair& sp, strs) {
+		res.push_back(query_min_distance(sp.first, sp.second));
+	}
+}
 // [TIME_STAMP] Stop at 22:23, 2017/11/28
 
 
 
+// [TIME_STAMP] Start at 21:49, 2017/12/02
+// --------------------------------------------------------------------------------------------------------------
+// 5.13 Add minimum characters to make a string as palindrome
+// First get the minimum number
+// Secondly, get a result string(any one of possible results)
+
+// Use DP(Dyanmic Programming) method
+int min_char_number_added_for_string_to_be_palindrome(const std::string& str, int** dp_matrix = NULL) {
+	if(str.empty() || str.size() == 1 || (str.size() == 2 && str[0] == str[1])) {
+		return 0;
+	}
+
+	int res = 0;
+	const int len = str.size();
+	int **dp = CU::get_matrix(len, len);
+
+	// dp[i][j] means add how many chars to str[i..j] to make it as a palindrome
+	for(int j = 0; j < len; j++) {
+		dp[j][j] = 0;
+		for(int i = j - 1; i > -1; i--) {
+			if(i == j - 1) {
+				dp[i][j] = str[i] == str[j] ? 0 : 1;
+			} else {
+				if(str[i] == str[j]) {
+					dp[i][j] = dp[i + 1][j - 1];
+				} else {
+					dp[i][j] = std::min(dp[i + 1][j], dp[i][j - 1]) + 1;
+				}
+			}
+		}
+	}
+
+	if(dp_matrix) {
+		CU::copy_matrix(dp, dp_matrix, len, len);
+	}
+
+	res = dp[0][len - 1];
+
+	CU::free_matrix(dp, len, len);
+	return res;
+}
+
+std::string get_palindrome_adding_min_chars(const std::string& str) {
+	if(str.empty() || str.size() == 1 || (str.size() == 2 && str[0] == str[1])) {
+		return str;
+	}
+
+	const int len = str.size();
+	int** dp = CU::get_matrix(len, len);
+
+	int min_chars = min_char_number_added_for_string_to_be_palindrome(str, dp);
+	int tlength = min_chars + len;
+
+	std::string res(tlength, '\0');
+	int left = 0;
+	int right = tlength - 1;
+	for(int i = 0, j = len - 1; i <= j; ) {
+		if(str[i] == str[j]) {
+			res[left++] = str[i++];
+			res[right--] = str[j--];
+		} else {
+			if(dp[i + 1][j] < dp[i][j - 1]) {
+				res[left++] = str[i];
+				res[right--] = str[i++];
+			} else {
+				res[left++] = str[j];
+				res[right--] = str[j--];
+			}
+		}
+	}
+
+	return res;
+}
+
+// --------------------------------------------------------------------------------------------------------------
+// 5.14 String of parentheses
+// (1) Judge if it is a valid string of parentheses
+// (2) Get the max length of valid sub-string of parentheses string
+
+// (1) Judge if it is a valid string of parentheses
+bool is_valid_parentheses_string(const std::string& str) {
+	if(str.empty() || str.size() % 2 != 0) {
+		return false;
+	}
+
+	const int len = str.size();
+	int cnt = 0;
+	for(int i = 0; i < len; i++) {
+		if(str[i] == '(') {
+			cnt++;
+		} else if(str[i] == ')') {
+			cnt--;
+			if(cnt < 0) {
+				return false;
+			}
+		} else { // str[i] != '(' && str[i] != ')'
+			return false;
+		}
+	}
+
+	return cnt == 0;
+}
+
+// (2) Get the max length of valid sub-string of parentheses string
+// DP method
+// dp[i], 0 <= i <= length(str)
+// dp[i] represents the max length of valid parentheses sub-string for str[0..i](str[i] as the last one char of this substring)
+int max_length_of_valid_parentheses_substring(const std::string& str) {
+	int res = 0;
+
+	if(str.empty()) {
+		return res;
+	}
+
+	const int len = str.size();
+	int *dp = new int[len];
+	memset(dp, 0, sizeof(int) * len);
+	dp[0] = 0;
+	int pos = 0;
+
+	for(int i = 1; i < len; i++) {
+		assert(str[i] == '(' || str[i] == ')');
+		if(str[i] == '(') {
+			dp[i] = 0;
+		} else { // str[i] == ')'
+			// max_len = dp[i - 1]
+			// => pos - pre + 1= max_len + 1 + 1
+			// => pre = pos - max_len - 1
+			int pre = i - dp[i - 1] - 1;
+			if(pre >= 0 && str[pre] == '(') {
+				dp[i] = dp[i - 1] + 2;
+				if(pre > 0 && str[pre - 1] == ')') {
+					dp[i] += dp[pre - 1];
+				}
+			}
+			if(dp[i] > res) {
+				pos = i;
+			}
+			res = std::max(res, dp[i]);
+		}
+	}
+
+	printf("Original string is: %s\n", str.c_str());
+	printf("Max valid parentheses sub-string length is: %d\n", res);
+	printf("Last char position of this sub-string is %d (starting from 0)\n", pos);
+	printf("Result string is %s\n", std::string(str.begin() + pos + 1 - res, str.begin() + pos + 1).c_str());
+
+	delete [] dp;
+	return res;
+}
+
+// --------------------------------------------------------------------------------------------------------------
+// 5.15 Get the value of a formula string
+// Assume the formula string is valid
+// Operator contains only +, -, * and / four types
+
+void add_num(std::deque<std::string>& deq, int num) {
+	if(!deq.empty()) {
+		const std::string& s = deq.back();
+		if(s == "+" || s == "-") {
+			; // do nothing
+		} else { // s == "*" || s == "/"
+			std::string ss(deq.back());
+			deq.pop_back();
+			std::string sn(deq.back());
+			deq.pop_back();
+			int snn = boost::lexical_cast<int>(sn);
+			num = (ss == "*") ? snn * num : snn / num;
+		}
+	}
+	deq.push_back(boost::lexical_cast<std::string>(num));
+}
+
+int get_num(std::deque<std::string>& deq) {
+	bool add_minus = true;
+	int sum = 0;
+	while(!deq.empty()) {
+		const std::string& s = deq.front();
+		if(s == "+") {
+			add_minus = true;
+		} else if(s == "-") {
+			add_minus = false;
+		} else {
+			sum = add_minus ? sum + boost::lexical_cast<int>(s) : sum - boost::lexical_cast<int>(s);
+		}
+		deq.pop_front();
+	}
+
+	return sum;
+}
+
+std::pair<int, int> get_formula_string_value(const std::string& str, const int start) {
+	std::pair<int, int> res;
+	if(str.empty()) {
+		printf("Empty string\n");
+		return res;
+	}
+
+	const int len = str.size();
+	int pre_num = 0;
+	std::deque<std::string> deq;
+	int i = start;
+	while(i < len) {
+		if(str[i] == ')') {
+			break;
+		}
+		int v = str[i] - '0';
+		if(v >= 0 && v <= 9) {
+			pre_num = pre_num * 10 + v;
+			i++;
+		} else if(str[i] != '(') { // Operators: + - * /
+			add_num(deq, pre_num);
+			deq.push_back(std::string(1, str[i]));
+			pre_num = 0;
+			i++;
+		} else { // str[i] == '('
+			res = get_formula_string_value(str, i + 1);
+			pre_num = res.first;
+			i = res.second + 1;
+		}
+	}
+
+	add_num(deq, pre_num);
+	res.first = get_num(deq);
+	res.second = i;
+
+	return res;
+}
+
+// [TIME_STAMP] Stop at 00:08, 2017/12/02
+
+
+// [TIME_STAMP] Start at 13:29, 2017/12/03
+// --------------------------------------------------------------------------------------------------------------
+// 5.16 Number of strings which must have 1 before 0(1 is on the left of 0) for its binary value
+// Speicify an integer N, there are 2^N strings consist of 0 and 1.
+// Get the number of those strings which 1 must be in front of each 0
+
+// DP method
+// dp[i] means in condition that str[0..i-1] is determined(and str[i-1] == '1') and statisfies the conditions
+// how many strings statisfy the condition
+// i.e. the number of strings consist of str[i...N-1]
+// So the result to get is dp[1], since str[0] must be 1
+// dp[N] = 1
+// dp[N-1] = 2
+// dp[N-2] = 3
+int total_string_number_one_before_zero(const int n) {
+	if(n < 0) {
+		return 0;
+	}
+	if(n == 1 || n == 2) {
+		return n;
+	}
+	int *dp = new int[n + 1];
+	dp[n] = 1;
+	dp[n - 1] = 2;
+	for(int i = n - 2; i > -1; i--) {
+		dp[i] = dp[i + 1] + dp[i + 2];
+	}
+
+	return dp[1];
+}
+
+// Or use space saving DP method
+int total_string_number_one_before_zero_space_saving(const int n) {
+	int next = 2;
+	int nnext = 1;
+	int res = 0;
+	// get dp[1] not dp[0]
+	for(int i = 1; i < n - 1; i++) {
+		res = next + nnext;
+		nnext = next;
+		next = res;
+	}
+
+	return res;
+}
+
+// --------------------------------------------------------------------------------------------------------------
+// 5.17 Concatenate a string array(vector) to get a final string which has min dict value
+
+bool scompare_f(const std::string& s1, const std::string& s2) {
+	return s1 + s2 < s2 + s2;
+}
+
+const std::string concatenate_strings_min_dict_value(const std::vector<std::string>& svec) {
+	std::string res;
+	std::vector<std::string> sv(svec);
+	std::sort(sv.begin(), sv.end(), scompare_f);
+	BOOST_FOREACH(const std::string& s, sv) {
+		res.append(s);
+	}
+
+	return res;
+}
+
+// --------------------------------------------------------------------------------------------------------------
+// 5.18 Find the longest substring without replication of characters
+
+// DP method to resolve
+// pre - This substring without duplication and ends with str[i-1](last char is str[i-1]), starting from position: pre + 1
+//       i.e. substring is str[pre+1...i-1] has no duplication
+
+const int max_substring_without_duplication(const std::string& str) {
+	if(str.empty() || str.size() == 1) {
+		return str.size();
+	}
+
+	int pre = -1;
+	int res = 0;
+	std::map<char, int> imap; // the char and its latest index/position
+	const int len = str.size();
+	for(int i = 0; i < len; i++) {
+		const char& c = str[i];
+		std::map<char, int>::iterator ii(imap.find(c));
+		if(ii != imap.end()) {
+			int last = ii->second;
+			if(last <= pre) {
+				res = std::max(res, i - pre);
+			} else {
+				res = std::max(res, i - last);
+				pre = last;
+			}
+			imap[c] = i;
+		} else {
+			// str[pre+1..i-1] + str[i]
+			imap[c] = i;
+			res = std::max(res, i - pre);
+		}
+	}
+
+	return res;
+}
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 5.19 Get the new type of character specified at position K in a string consists of new types of chars
+// Assume the string consists of correct chars of new types
+// Valid char type:
+//	(1) 1 char or 2 chars
+//	(2) a single lower case; upper case + lower case; upper case + upper case
+
+const std::string new_type_char_at_position(const std::string& str, const int k) {
+	if(str.empty() || k < 0 || k >= (int)str.size()) {
+		return "";
+	}
+
+	std::string res;
+	int upper_case_count = 0;
+	for(int i = k - 1; i > -1; i--) {
+		if(str[i] >= 'a' && str[i] <= 'z') {
+			break;
+		}
+		upper_case_count++;
+	}
+
+	if(upper_case_count % 2 == 0) {
+		if(str[k] >= 'a' && str[k] <= 'z') {
+			return std::string(1, str[k]);
+		} else { // upper cases
+			return std::string(str.begin() + k, str.begin() + k + 1 + 1); // [first, last)
+		}
+	} else {
+		return std::string(str.begin() + k - 1, str.begin() + k + 1); // [first, last)
+	}
+
+	return res;
+}
+
+// --------------------------------------------------------------------------------------------------------------
+// 5.20 The shortest substring in string A, which contains all chars in string B
+// The order of all the chars of string B in A is not required
+
+int shortest_substring_containing_another_string(const std::string& str1, const std::string str2) {
+	if(str1.empty() || str2.empty() || str1.size() < str2.size()) {
+		return 0;
+	}
+
+	int res = INT_MAX;
+
+	int left = 0;
+	int right = 0;
+	std::map<char, int> smap;
+	BOOST_FOREACH(const char& c, str2) {
+		if(smap.find(c) != smap.end()) {
+			smap[c]++;
+		} else {
+			smap[c] = 1;
+		}
+	}
+
+	const int len = str1.size();
+	int count = str2.size();
+	while(right < len + 1) { // Just let the last one to be calculated, so use 'len+1' instead of 'len'
+		if(count == 0) {
+#if 0
+			// debug use
+			printf("All chars in str2 are found\n");
+			typedef std::pair<char, int> cpair;
+			BOOST_FOREACH(const cpair& cp, smap) {
+				printf("(%c, %d)\n", cp.first, cp.second);
+			}
+#endif // 0
+			while(1) {
+				const char& c = str1[left];
+				if(smap.find(c) != smap.end()) {
+					// int debug_cur_num = smap[c];
+					smap[c]++;
+					if(smap[c] > 0) {
+						count = 1;
+						res = std::min(res, right - left + 1 - 1); // Caution: now 'right' has already moved to the next unhandled char
+						left++;
+						break;
+					}
+				}
+				left++;
+			}
+		}
+
+		// Just let the last one to be calculated
+		if(right >= len) {
+			break;
+		}
+		if(smap.find(str1[right]) != smap.end()) {
+			if(smap[str1[right]] > 0) {
+				count--;
+			}
+			smap[str1[right]]--;
+		}
+		right++;
+	}
+
+	return res == INT_MAX ? 0 : res;
+}
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 5.21 Palindrome partitioning
+// Get minimum times to partition a string to make all partitions are palindrome
+// DP method
+// dp[i] means how many time to partition a string str[i...N-1], N is length(str)
+// dp[0] is what we want
+// For each j (i <= j <= N-1), if str[i..j] is palindrome, then dp[i] could be dp[j+1] + 1
+//		which means partition str[i..j] and str[j+1...N-1], and do partition in str[j+1...N-1]
+// Traverse j from i to N-1 (i <= j <= N-1) and get min value
+//		dp[i] = MIN{dp[j+1] + 1 && str[i..j] is palindrome}, i <= j <= N-1
+
+int palindrome_partition(const std::string& str) {
+	if(str.empty() || str.size() == 1 || (str.size() == 2 && str[0] == str[1])) {
+		return 0;
+	}
+
+	int res = 0;
+
+	const int len = str.size();
+	int *dp = new int[len + 1];
+	memset(dp, 0, sizeof(int) * len);
+	dp[len] = -1;
+	// dp[len - 1] = 0;
+	// dp[len - 2] = str[len - 1] == str[len - 2] ? 0 : 1;
+
+	// p[i][j] means if str[i..j] is palindrome(true) or not(false)
+	int **p = CU::get_matrix(len, len);
+	for(int k = 0; k < len; k++) {
+		memset(p[k], 0, sizeof(int) * len);
+	}
+
+	for(int i = len - 1; i > -1; i--) {
+		dp[i] = INT_MAX;
+		for(int j = i; j < len; j++) {
+			if(j == i || (j - i == 1 && str[i] == str[j]) || (str[i] == str[j] && p[i+1][j-1]) ) {
+				p[i][j] = 1;
+				dp[i] = std::min(dp[i], dp[j+1] + 1); // Since here j+1 might be 'len' long, so dp has to be size of 'len+1'
+			}
+		}
+	}
+
+	res = dp[0];
+	delete [] dp;
+	CU::free_matrix(p, len, len);
+
+	return res;
+}
+
+// --------------------------------------------------------------------------------------------------------------
+// 5.22 String match
+// Skipped
+
+
+// [TIME_STAMP] Stop at 18:02, 2017/12/03
 
 
 
 
-// [TIME_STAMP] Start at XX:XX, 2017/XX/XX
-// [TIME_STAMP] Stop at XX:XX, 2017/XX/XX
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 5.23 Lexicographic tree
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // [TIME_STAMP] Start at XX:XX, 2017/XX/XX
 // [TIME_STAMP] Stop at XX:XX, 2017/XX/XX

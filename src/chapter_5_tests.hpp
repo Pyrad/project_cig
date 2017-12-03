@@ -34,12 +34,37 @@ void test_5_7_2();
 
 void test_5_8();
 
-void test_5_9_1();
-void test_5_9_2();
+void test_5_9();
 
-void test_5_10();
+void test_5_10_1();
+void test_5_10_2();
 
-void test_5_11_1();
+void test_5_11();
+
+void test_5_12_1();
+void test_5_12_2();
+
+void test_5_12();
+
+void test_5_13();
+
+void test_5_14();
+
+void test_5_15();
+
+void test_5_16();
+
+void test_5_17();
+
+void test_5_17();
+
+void test_5_18();
+
+void test_5_19();
+
+void test_5_20();
+
+void test_5_21();
 
 } // namespace C5
 #endif /* CHAPTER_5_TESTS_HPP_ */

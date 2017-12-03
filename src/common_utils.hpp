@@ -10,6 +10,7 @@
 
 #include <string>
 #include <vector>
+#include <deque>
 
 namespace common_utils {
 
@@ -203,8 +204,18 @@ std::vector<std::string> convert_to_string_vector(const std::string ss[], const 
 
 
 
-
-
+// ****************************************
+//
+// For debugging use
+//
+// ****************************************
+template<typename T>
+void print_deque(const std::deque<T>& deq) {
+	for(typename std::deque<T>::const_iterator i = deq.begin(); i != deq.end(); i++) {
+		std::cout << *i << " ";
+	}
+	std::cout << std::endl;
+}
 
 
 
