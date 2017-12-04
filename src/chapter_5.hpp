@@ -1272,25 +1272,146 @@ int palindrome_partition(const std::string& str) {
 
 
 
-
+// [TIME_STAMP] Start at 21:17 2017/12/04
 // --------------------------------------------------------------------------------------------------------------
 // 5.23 Lexicographic tree
+// Assume all chars are: a~z
+
+class TrieNode {
+public:
+	TrieNode();
+	~TrieNode() { if(m_map) delete [] m_map; }
+
+public:
+	int m_share_cnt;
+	int m_end;
+	TrieNode* *m_map;
+};
+
+TrieNode::
+TrieNode() : m_share_cnt(0), m_end(0), m_map(NULL) {
+	m_map = new TrieNode*[26]; // assumption that all chars are a~z
+	memset(m_map, 0, sizeof(int) * 26);
+}
+
+class Trie {
+public:
+	Trie() {
+		// Actually m_root has:
+		// 0 m_share_cnt, since it represents no char
+		// 0 m_end, since no word ends at it
+		// Several pointers pointing to different TrieNodes
+		m_root = get_trie_node();
+	}
+	~Trie() { free_all_nodes(); }
+
+public:
+	void insert(const std::string& str);
+	void remove(const std::string& str);
+	bool search(const std::string& str);
+	int prefix_number(const std::string& pre);
+
+private:
+	TrieNode* get_trie_node() {
+		TrieNode *n = new TrieNode;
+		m_collect.push_back(n);
+		return n;
+	}
+	void free_all_nodes() {
+		for(std::list<TrieNode*>::iterator itr = m_collect.begin(); itr != m_collect.end(); itr++) {
+			TrieNode *p = *itr;
+			if(p) {
+				delete p;
+				p = NULL;
+			}
+		}
+		m_collect.clear();
+	}
+
+private:
+	std::list<TrieNode*> m_collect;
+
+private:
+	TrieNode* m_root;
+};
 
 
+void Trie::
+insert(const std::string& str) {
+	if(str.empty()) {
+		return ;
+	}
 
+	TrieNode *node = m_root;
+	BOOST_FOREACH(const char& c, str) {
+		int idx = c - 'a';
+		if(!node->m_map[idx]) {
+			TrieNode *nd = get_trie_node();
+			node->m_map[idx] = nd;
+		}
+		node = node->m_map[idx];
+		node->m_share_cnt++;
+	}
+	node->m_end++;
+}
 
+void Trie::
+remove(const std::string& str) {
+	if(str.empty() || !search(str) || !m_root) {
+		return ;
+	}
 
+	TrieNode *node = m_root;
+	BOOST_FOREACH(const char& c, str) {
+		int idx = c - 'a';
+		TrieNode *nd = node->m_map[idx];
+		assert(nd); // Since search(str) == true
+		if(nd->m_share_cnt--) {
+			node->m_map[idx] = NULL;
+			return ;
+		}
+		node = nd;
+	}
+	node->m_end--;
+}
 
+bool Trie::
+search(const std::string& str) {
+	if(str.empty() || !m_root) {
+		return false;
+	}
 
+	TrieNode *node = m_root;
+	BOOST_FOREACH(const char& c, str) {
+		int idx = c - 'a';
+		if(!node->m_map[idx]) {
+			return false;
+		}
+		node = node->m_map[idx];
+	}
 
+	return node->m_end > 0;
+}
 
+int Trie::
+prefix_number(const std::string& pre) {
+	if(pre.empty() || !m_root) {
+		return false;
+	}
 
+	TrieNode *node = m_root;
+	BOOST_FOREACH(const char& c, pre) {
+		int idx = c - 'a';
+		if(!node->m_map[idx]) {
+			return 0;
+		}
+		node = node->m_map[idx];
+	}
 
+	return node->m_share_cnt;
+}
 
-
-
-
-
+// [TIME_STAMP] Stop at 22:40, 2017/12/04
 
 
 

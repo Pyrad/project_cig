@@ -66,5 +66,7 @@ void test_5_20();
 
 void test_5_21();
 
+void test_5_23();
+
 } // namespace C5
 #endif /* CHAPTER_5_TESTS_HPP_ */

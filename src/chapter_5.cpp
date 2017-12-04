@@ -306,8 +306,75 @@ void test_5_21() {
 	printf("The min palindrome-paritioning times for string '%s' is: %d\n", test_string.c_str(), palindrome_partition(test_string));
 }
 
+void test_5_23() {
+	Trie* a_trie = new Trie;
+
+	a_trie->insert("abc");
+	a_trie->insert("abcd");
+	a_trie->insert("abd");
+	a_trie->insert("b");
+	a_trie->insert("bcd");
+	a_trie->insert("efg");
+	a_trie->insert("hik");
+
+	std::string str("abc");
+	printf("If '%s' exists in the trie: %s\n", str.c_str(), a_trie->search(str) ? "Yes" : "No");
+	str = "k";
+	printf("If '%s' exists in the trie: %s\n", str.c_str(), a_trie->search(str) ? "Yes" : "No");
+	str = "hig";
+	printf("If '%s' exists in the trie: %s\n", str.c_str(), a_trie->search(str) ? "Yes" : "No");
+	str = "efg";
+	printf("If '%s' exists in the trie: %s\n", str.c_str(), a_trie->search(str) ? "Yes" : "No");
+
+	printf("Remove '%s' from trie...\n", str.c_str());
+	a_trie->remove(str);
+	printf("If '%s' exists in the trie: %s\n", str.c_str(), a_trie->search(str) ? "Yes" : "No");
+
+	delete a_trie;
+}
+
 
 
 // [TIME_STAMP] Stop at
 
 } // namespace C5
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
