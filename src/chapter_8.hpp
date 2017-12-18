@@ -911,88 +911,130 @@ double max_accumulated_product_subarray(const std::vector<double>& ivec) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// [TIME_STAMP] Start at 22:07, 2017/12/18
+// --------------------------------------------------------------------------------------------------------------
+// 8.20 Get K max values from N sorted arrays
+// Notice that arrays may have different length, but all of them are sorted and in ascending order
+
+class _heapNode {
+public:
+	_heapNode(const int& v, const int& from, const int& pos) : m_value(v), m_from_array(from), m_pos(pos) {}
+	~_heapNode() {}
+public:
+	int m_value;
+	int m_from_array;
+	int m_pos;
+};
+
+
+void _heap_filter_up(_heapNode** h, int hsize, int pos) {
+	_heapNode* n = h[pos];
+	int parent = (pos - 1) / 2;
+	while(parent > 0) {
+		_heapNode* p = h[parent];
+		if(n->m_value <= p->m_value) {
+			break;
+		}
+		_heapNode* tmp = h[pos];
+		h[pos] = h[parent];
+		h[parent] = tmp;
+		pos = parent;
+		parent = (pos - 1) / 2;
+	}
+}
+
+void _heap_filter_down(_heapNode** h, int hsize, int pos) {
+	int left = pos * 2 + 1;
+	int right = pos * 2 + 2;
+	// _heapNode* p = h[pos];
+	int mindex = pos;
+	while(left < hsize) {
+		if(h[left]->m_value > h[mindex]->m_value) {
+			mindex = left;
+		}
+		if(right < hsize && h[right]->m_value > h[mindex]->m_value) {
+			mindex = right;
+		}
+		if(mindex == pos) {
+			break;
+		}
+		_heapNode* tmp = h[pos];
+		h[pos] = h[mindex];
+		h[mindex] = tmp;
+
+		pos = mindex;
+		left = pos * 2 + 1;
+		right = pos * 2 + 2;
+	}
+}
+
+const std::list<int> get_k_max_from_n_sorted_arrays(std::vector<std::vector<int> >& vecs, const int k) {
+	std::list<int> res;
+
+	// Error & unexpected situations check
+	if(vecs.empty()) {
+		return res;
+	}
+
+	typedef std::vector<std::vector<int> > varray;
+	int total_cnt = 0;
+	for(varray::iterator itr = vecs.begin(); itr != vecs.end(); itr++) {
+		if(itr->empty()) {
+			return res;
+		}
+		total_cnt += itr->size();
+	}
+
+	if(total_cnt < k) {
+		return res;
+	}
+
+	const int vsize = vecs.size();
+	_heapNode** heap = new _heapNode*[vsize];
+	memset(heap, 0, sizeof(_heapNode*) * vsize); // initialize
+	int hsize = 0;
+	for(int i = 0; i < vsize; i++) {
+		if(!vecs[i].empty()) {
+			int v = vecs[i].back();
+			int pos = vecs[i].size() - 1;
+			vecs[i].pop_back();
+			_heapNode* nd = new _heapNode(v, i, pos);
+			heap[hsize++] = nd;
+			_heap_filter_up(heap, hsize, hsize - 1);
+		}
+	}
+
+	for(int i = 0; i < k; i++) {
+		_heapNode* n = heap[0];
+		assert(n != NULL);
+		res.push_back(n->m_value);
+		if(n->m_pos == 0) {
+			delete heap[0];
+			heap[0] = heap[hsize - 1];
+			heap[hsize - 1] = NULL;
+			_heap_filter_down(heap, hsize--, 0);
+		} else {
+			const int from = n->m_from_array;
+			_heapNode* nn = new _heapNode(vecs[from].back(), from, vecs[from].size() - 1);
+			delete n;
+			n = NULL;
+			heap[0] = nn;
+			_heap_filter_down(heap, hsize, 0); // No need to decrease 'hisze' since no size change
+		}
+	}
+
+	for(int j = 0; j < vsize; j++) {
+		if(heap[j]) {
+			delete heap[j];
+			heap[j] = NULL;
+		}
+	}
+	delete [] heap;
+
+	return res;
+}
+
+// [TIME_STAMP] Stop 23:16, 2017/12/18
 
 
 
