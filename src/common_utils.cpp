@@ -293,6 +293,22 @@ void print_vector_vector(const std::vector<std::vector<T> >& vecv) {
     }
 }
 
+void swap(std::vector<int>& vec, int i, int j) {
+	if(vec.empty()) {
+		return ;
+	}
+
+	const int len = vec.size();
+	if(i < 0 || i >= len || j < 0 || j > len) {
+		return ;
+	}
+
+	int _temp = vec[i];
+	vec[i] = vec[j];
+	vec[j] = _temp;
+
+	return ;
+}
 
 
 // ------------------------------------------

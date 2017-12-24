@@ -157,6 +157,8 @@ void print_vector(const std::vector<T>& vec);
 template<typename T>
 void print_vector_vector(const std::vector<std::vector<T> >& vecv);
 
+void swap(std::vector<int>& vec, int i, int j);
+
 
 // ****************************************
 //

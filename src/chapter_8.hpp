@@ -24,12 +24,16 @@
 #include <set>
 #include <utility>
 
-
+// Boost libraries
+#include <boost/foreach.hpp>
 
 #include "common_utils.hpp"
 
 
 namespace C8 {
+
+namespace CU = common_utils;
+
 
 // [TIME_STAMP] Start at 14:15 2017/12/09
 
@@ -1040,10 +1044,402 @@ const std::list<int> get_k_max_from_n_sorted_arrays(std::vector<std::vector<int>
 
 
 
+// [TIME_STAMP] Start at 15:34, 2017/12/24
+// --------------------------------------------------------------------------------------------------------------
+// 8.21 The max square of which the boarders  are consist of '1' in a square matrix
+// (1) Values in matrix are '0' or '1'
+// (2) the square's boarders are consist of '1'
+// (3) Get the boarder length
 
 
+// Solution
+// (1) Separately check NxN positions
+// (2) For each position, check if it is the upper-left point of a valid square
+// Notice, use pre-processed RIGHT matrix and DOWN matrix
+// RIGHT[i][j] means start from (i,j), there're how many successive 1s to the right at most
+//  DOWN[i][j] means start from (i,j), there're how many successive 1s down to the bottom at most
+
+const int max_square_boarders_are_1_value_in_matrix(int **m, const int slen) {
+	int res = 0;
+
+	if(!m || slen <= 0) {
+		return res;
+	}
+
+	int **rmatrix = CU::get_matrix(slen, slen);
+	int **dmatrix = CU::get_matrix(slen, slen);
+
+	rmatrix[slen - 1][slen - 1] = m[slen - 1][slen - 1] == 1 ? 1 : 0;
+	dmatrix[slen - 1][slen - 1] = m[slen - 1][slen - 1] == 1 ? 1 : 0;
+
+	// right most column
+	for(int r = slen - 2; r > -1; r--) {
+		rmatrix[r][slen - 1] = m[r][slen - 1] == 1 ? 1 : 0;
+		dmatrix[r][slen - 1] = m[r][slen - 1] == 1 ? dmatrix[r + 1][slen - 1] + 1 : 0;
+	}
+	// bottom column
+	for(int c = slen - 2; c > -1; c--) {
+		rmatrix[slen - 1][c] = m[slen - 1][c] == 1 ? rmatrix[slen - 1][c + 1] + 1 : 0;
+		dmatrix[slen - 1][c] = m[slen - 1][c] == 1 ? 1 : 0;
+	}
+
+	// Outer loop: from right to left
+	// Inner loop: from bottom to top
+	// From column of last but one start
+	for(int j = slen - 2; j > -1; j--) {
+		// From row of last but one start
+		for(int i = slen - 2; i > -1; i--) {
+			rmatrix[i][j] = rmatrix[i][j] == 1 ? rmatrix[i][j + 1] + 1 : 0;
+			dmatrix[i][j] = dmatrix[i][j] == 1 ? dmatrix[i + 1][j] + 1 : 0;
+		}
+	}
+
+	// Check each position
+	for(int i = 0; i < slen; i++) {
+		for(int j = 0; j < slen; j++) {
+			int s = std::min(slen - i + 1, slen - j + 1);
+			for(int ssize = s; ssize > 0; ssize--) {
+				if(i + ssize < slen && j + ssize < slen) {
+					if(rmatrix[i][j] >= ssize && dmatrix[i][j] >= ssize && rmatrix[i + ssize][j] >= ssize && dmatrix[i][j + ssize] >= ssize) {
+						res = std::max(res, ssize);
+					}
+				}
+			}
+		}
+	}
+
+	CU::free_matrix(rmatrix, slen, slen);
+	CU::free_matrix(dmatrix, slen, slen);
+	return res;
+}
+
+// --------------------------------------------------------------------------------------------------------------
+// 8.22 Accumulated multiply array except itself
+// Given an array, return the multiply array, the multiply excepts the element itself for each element
+// For example, arr=[2,3,1,4], return [12, 8, 24, 6]
+// Which are,
+// 12 = 3 * 1 * 4
+//  8 = 2 * 1 * 4
+// 24 = 2 * 3 * 4
+//  6 = 2 * 3 * 1
+
+// First method
+const std::vector<int> accumulated_multiply_array(const std::vector<int>& ivec) {
+	std::vector<int> res;
+	if(ivec.empty()) {
+		return res;
+	}
+
+	int ilen = ivec.size();
+	std::vector<int> leftvec(ilen);
+	std::vector<int> rightvec(ilen);
+
+	// for left vector
+	leftvec[0] = 1;
+	for(int i = 1; i < ilen; i++) {
+		leftvec[i] = ivec[i] * leftvec[i - 1];
+	}
+	// for right vector
+	rightvec[ilen - 1] = 1;
+	for(int i = ilen - 2; i > -1; i--) {
+		rightvec[i] = ivec[i] * rightvec[i + 1];
+	}
+
+	res.resize(ilen);
+	for(int i = 0; i < ilen; i++) {
+		res[i] = leftvec[i] * rightvec[i];
+	}
+
+	return res;
+}
+
+// Second method
+const std::vector<int> accumulated_multiply_array_2(const std::vector<int>& ivec) {
+	std::vector<int> res;
+	if(ivec.empty()) {
+		return res;
+	}
+
+	// Check '0' number
+	int n = 0;
+	BOOST_FOREACH(const int v, ivec) {
+		if(v == 0) {
+			n++;
+		}
+	}
+
+	int ilen = ivec.size();
+	res.resize(ilen , 0);
+	if(n > 1) {
+		return res;
+	} else if(n == 1) {
+		int accmulti = 1;
+		int pos = 0;
+		for(int i = 0; i < ilen; i++) {
+			if(ivec[i] == 0) {
+				pos = i;
+			} else {
+				accmulti *= ivec[i];
+			}
+		}
+		res[pos] = accmulti;
+		return res;
+	} else {
+		int accmulti = 1;
+		for(int i = 0; i < ilen; i++) {
+			accmulti *= ivec[i];
+		}
+		for(int i = 0; i < ilen; i++) {
+			res[i] = accmulti / ivec[i];
+		}
+		return res;
+	}
+
+	return res;
+}
+
+// --------------------------------------------------------------------------------------------------------------
+// 8.23 Partition an ordered array, partition an array containing 3 kinds of values
+// Issue 1
+// Adjust an ordered array
+// (1) make the left part as ascending order without repetition
+// (2) move the repeated elements to the right part(no matter what the order is)
+// Issue 2
+// An array contains 3 kinds of values(0, 1 and 2)
+// Sort this array
+// Issue 2 mutation 1
+// An array has 3 kinds of balls(red, blue and yellow)
+// sort this array as the order of "red at left, blue in the middle and yellow at right"
+// Issue 2 mutation 2
+// An array has 3 kinds of values(>k, ==k and <k)
+// sort this array as the order of "<k at left, ==k in the middle and >k at right"
+
+// Issue 1
+// Unique left part of an ordered array
+void unique_array_left_part(std::vector<int>& ivec) {
+	if(ivec.empty()) {
+		return ;
+	}
+
+	int llast = 0;
+	int i = 1;
+	const int len = ivec.size();
+
+	while(i < len) {
+		if(ivec[i] != ivec[llast]) {
+			int temp = ivec[llast + 1];
+			ivec[llast + 1] = ivec[i];
+			ivec[i] = temp;
+			i++;
+			llast++;
+		} else {
+			i++;
+		}
+	}
+}
 
 
+// Issue 2 and its mutation
+void partition_an_array(std::vector<int>& ivec) {
+	if(ivec.empty() || ivec.size() == 1) {
+		return ;
+	}
+
+	const int len = ivec.size();
+	int pred = -1; // one before first element
+	int pblue = 0;
+	int pyellow = len; // one after last element
+
+	while(pblue < pyellow) {
+		if(ivec[pblue] == 0) {
+			int temp = ivec[pred + 1];
+			ivec[pred + 1] = ivec[pblue];
+			ivec[pblue] = temp;
+			pred++;
+		} else if(ivec[pblue] == 1) {
+			pblue++;
+		} else { // ivec[pblue] == 2
+			int temp = ivec[pyellow - 1];
+			ivec[pyellow - 1] = ivec[pblue];
+			ivec[pblue] = temp;
+			pyellow--;
+		}
+	}
+}
+
+// or index could also be this
+void partition_an_array_2(std::vector<int>& ivec) {
+	if(ivec.empty() || ivec.size() == 1) {
+		return ;
+	}
+
+	const int len = ivec.size();
+	int pred = 0;
+	int pblue = 0;
+	int pyellow = len - 1;
+
+	while(pblue <= pyellow) {
+		if(ivec[pblue] == 0) {
+			int temp = ivec[pred];
+			ivec[pred] = ivec[pblue];
+			ivec[pblue] = temp;
+			pred++;
+		} else if(ivec[pblue] == 1) {
+			pblue++;
+		} else { // ivec[pblue] == 2
+			int temp = ivec[pyellow];
+			ivec[pyellow] = ivec[pblue];
+			ivec[pblue] = temp;
+			pyellow--;
+		}
+	}
+}
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 8.24 Get the min path from top-left to bottom-right of a matrix
+// matrix[i][j] == 1 --> means road is connected
+// matrix[i][j] == 0 --> means road is not connected
+
+const int min_path_matrix_topleft_to_bottomright(int **m, const int row, const int col) {
+	int res = 0;
+	if(!m || row < 1 || col < 1) {
+		return res;
+	}
+
+	int **dp = CU::get_matrix(row, col);
+	dp[0][0] = m[0][0];
+	// left column
+	for(int i = 1; i < row; i++) {
+		dp[i][0] = (dp[i - 1][0] == 0 || m[i - 1][0] == 0) ? 0 : dp[i - 1][0] + m[i][0];
+	}
+	// top row
+	for(int j = 1; j < col; j++) {
+		dp[0][j] = (dp[0][j - 1] == 0 || m[0][j - 1] == 0) ? 0 : dp[0][j - 1] + m[0][j];
+	}
+
+	for(int i = 1; i < row; i++) {
+		for(int j = 1; j < col; j++) {
+			if(dp[i - 1][j] != 0 && dp[i][j - 1] != 0) {
+				dp[i][j] = m[i][j] == 0 ? 0 : std::min(dp[i - 1][j], dp[i][j - 1]) + 1;
+			} else if(dp[i - 1][j] != 0) {
+				dp[i][j] = m[i][j] == 0 ? 0 : dp[i - 1][j] + 1;
+			} else if(dp[i][j - 1] != 0) {
+				dp[i][j] = m[i][j] == 0 ? 0 : dp[i][j - 1] + 1;
+			} else {
+				dp[i][j] = 0;
+			}
+		}
+	}
+
+	res = dp[row - 1][col - 1];
+	CU::free_matrix(dp, row, col);
+
+	return res;
+}
+
+// --------------------------------------------------------------------------------------------------------------
+// 8.25 Find the min positive integer which doesn't appear in an unordered array
+// Example
+// arr = [-1, 2, 3, 4]
+// arr = [1, 2, 3, 4]
+
+const int min_positive_integer_missing(const std::vector<int>& ivec) {
+	int res = -1;
+	if(ivec.empty()) {
+		return res;
+	}
+
+	const int len = ivec.size();
+	// Make a copy
+	std::vector<int> v(ivec.begin(), ivec.end());
+	// Current range appeared -> [1..l]
+	int l = 0; // Initial value is 0, which means current range appeared is [0..0]
+	// optimistic range will appear -> [1..r]
+	int r = len; // Initial value is len, which means most optimistic range will be [1..len]
+
+	while(l < r) {
+		if(v[l] == l + 1) {
+			l++;
+		} else if (v[l] <=l || v[l] > r || v[v[l] - 1] == v[l]) {
+			v[l] = v[r - 1];
+			r--;
+		} else {
+			// now v[l] is in range [l+1, ..., r]
+			CU::swap(v, l, v[l] - 1);
+		}
+	}
+	res = l + 1;
+
+	return res;
+}
+
+// --------------------------------------------------------------------------------------------------------------
+// 8.26 The max different of two adjacent elements in an array after sorting
+
+int get_bucket_num(long num, long len, long min, long max) {
+	return (int) ((num - min) * len / (max - min));
+}
+
+const int max_diff_two_adjacent_array_after_sorting(const std::vector<int>& ivec) {
+	int res = 0;
+	if(ivec.empty()) {
+		return res;
+	}
+
+	const int len = ivec.size();
+
+	int maxv = ivec[0];
+	int minv = ivec[0];
+	for(int i = 1; i < len; i++) {
+		maxv = std::max(maxv, ivec[i]);
+		minv = std::min(minv, ivec[i]);
+	}
+
+	if(maxv == minv) {
+		// All elements are equal to one another
+		return res;
+	}
+
+	// Get 'len + 1' buckets, one more than ivec.size()
+	int *bmax = new int[len + 1];
+	int *bmin = new int[len + 1];
+	bool *bucket_not_empty = new bool[len + 1];
+	for(int i = 0; i < len; i++) {
+		int bnum = get_bucket_num(ivec[i], len, minv, maxv);
+		bmax[bnum] = bucket_not_empty[bnum] ? std::max(bmax[bnum], ivec[i]) : ivec[i];
+		bmin[bnum] = bucket_not_empty[bnum] ? std::min(bmin[bnum], ivec[i]) : ivec[i];
+		bucket_not_empty[bnum] = true;
+	}
+
+	int last_max = 0;
+	// Find first non-empty bucket
+	int idx = 0;
+	while(idx < len) {
+		if(bucket_not_empty[idx]) {
+			last_max = bmax[idx];
+			break;
+		}
+		idx++;
+	}
+
+	idx++; // begin from next bucket after first non-empty bucket
+	while(idx < len + 1) {
+		if(bucket_not_empty[idx]) {
+			res = std::max(res, bmin[idx] - last_max);
+			last_max = bmax[idx];
+			idx++;
+		}
+	}
+
+	delete [] bmax;
+	delete [] bmin;
+	delete [] bucket_not_empty;
+
+	return res;
+}
+
+// [TIME_STAMP] Stop at 22:15, 2017/12/24
 
 
 
