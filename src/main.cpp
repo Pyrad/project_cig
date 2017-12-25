@@ -14,6 +14,9 @@
 
 #include "chapter_5_tests.hpp"
 
+#include "smart_pointer_test.hpp"
+
+
 int main() {
 	std::cout << "Greetings" << std::endl; // prints Greetings
 
@@ -49,6 +52,11 @@ int main() {
 	C5::test_5_21();
 	// C5::test_5_22();
 	C5::test_5_23();
+
+
+
+	// Other Tests
+	smart_pointer_test::run_smart_pointer_test();
 
 	return 0;
 }
