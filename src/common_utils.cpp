@@ -94,6 +94,10 @@ int gen_random_int_4(const int& a, const int& b) {
     srand((unsigned)time(NULL));
     return a + rand() % (b - a + 1) - 1;
 }
+// (0, 1)
+int gen_random_double_0to1() {
+	return rand() / (double) RAND_MAX;
+}
 
 
 void VISIT(node* h) {

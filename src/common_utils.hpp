@@ -135,7 +135,8 @@ int gen_random_int_2(const int& a, const int& b);
 int gen_random_int_3(const int& a, const int& b);
 // (a, b)
 int gen_random_int_4(const int& a, const int& b);
-
+// (0, 1)
+int gen_random_double_0to1();
 
 
 
