@@ -13,6 +13,8 @@
 
 
 #include "chapter_5_tests.hpp"
+#include "chapter_9_test.hpp"
+
 
 #include "smart_pointer_test.hpp"
 
@@ -57,6 +59,9 @@ int main() {
 
 	// Other Tests
 	smart_pointer_test::run_smart_pointer_test();
+
+	// Tests in chapter 9
+	C9::test_9_XX();
 
 	return 0;
 }

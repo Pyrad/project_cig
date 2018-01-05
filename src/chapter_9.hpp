@@ -642,8 +642,68 @@ getRandom() const {
 
 
 
-// [TIME_STAMP] Start at XX, 2017/XX/XX
-// [TIME_STAMP] Stop at XX, 2017/XX/XX
+// [TIME_STAMP] Start at 23:20, 2018/01/05
+
+void get_first_unformed_number_0_process(int i, int sum, const std::vector<int>& arr, std::set<int>& ss) {
+	const int sz = arr.size();
+	if(i == sz) {
+		ss.insert(sum);
+		return ;
+	}
+	get_first_unformed_number_0_process(i + 1, sum, arr, ss);
+	get_first_unformed_number_0_process(i + 1, sum + arr[i + 1], arr, ss);
+}
+
+int get_first_unformed_number_0(const std::vector<int>& arr) {
+	std::set<int> sset;
+	get_first_unformed_number_0_process(0, 0, arr, sset);
+
+	int sum = 0;
+	BOOST_FOREACH(int v, arr) {
+		sum += v;
+	}
+	for(int i = 1; i <= sum; i++) {
+		if(sset.find(i) == sset.end()) {
+			return i;
+		}
+	}
+
+	return sum + 1;
+}
+
+int get_first_unformed_number(const std::vector<int>& arr) {
+	if(arr.empty()) {
+		return -1;
+	}
+
+	int sum = 0;
+	int min = arr[0];
+	const int len = arr.size();
+	for(int i = 0; i < len; i++) {
+		sum += arr[i];
+		min = std::min(min, arr[i]);
+	}
+
+	std::vector<int> dp(sum + 1, 0);
+	for(int i = 0; i < len; i++) {
+		for(int j = sum; j >= arr[i]; j--) {
+			if(dp[j - arr[i]] + arr[i] > dp[j]) {
+				dp[j] = dp[j - arr[i]] + arr[i];
+			}
+		}
+	}
+
+	for(int i = min; i < sum; i++) {
+		if(i != dp[i]) {
+			return i;
+		}
+	}
+
+	return sum + 1;
+}
+
+
+// [TIME_STAMP] Stop at 23:44, 2018/01/05
 
 
 // [TIME_STAMP] Start at XX, 2017/XX/XX
