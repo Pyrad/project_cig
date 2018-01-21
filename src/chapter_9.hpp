@@ -26,6 +26,7 @@
 #include <set>
 #include <utility>
 #include <vector>
+#include <numeric>
 
 // Boost libraries
 #include <boost/foreach.hpp>
@@ -701,13 +702,232 @@ int get_first_unformed_number(const std::vector<int>& arr) {
 
 	return sum + 1;
 }
-
-
 // [TIME_STAMP] Stop at 23:44, 2018/01/05
 
 
-// [TIME_STAMP] Start at XX, 2017/XX/XX
-// [TIME_STAMP] Stop at XX, 2017/XX/XX
+// [TIME_STAMP] Start at 10:01, 2018/01/21
+// --------------------------------------------------------------------------------------------------------------
+// 9.12 Adjust the appearance probablity of a digit in range [0, x)
+//  Assume Math.random() (here use a pseduo function instead) returns a float number in [0, 1) equally,
+//  then the probability of occurrence for float number in range [0, x) (0<x<=1) would be 'x'.
+//  Given a integer k(k > 0), Write a function to return a float in [0, 1),
+//  but the probability of occurrence in [0, x) would be x^k.
+
+double math_random() {
+    return CU::gen_random_double_0to1();
+}
+
+double randXPowerK(int k) {
+    if (k < 1) {
+        return -1;
+    }
+    double res = -1;
+    for(int i = 0; i < k; i++) {
+        res = std::max(res, math_random());
+    }
+    return res;
+}
+
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.13 Turn a path array into a statistical array
+//
+// paths:
+//   This is a path array, 'path[i] = j' represent that city 'i' is connected to city 'j'
+//   If 'path[i] = i', then city 'i' is capital.
+// Assume there's only one capital and no city points to itself except the capital
+// Question:
+//   Get a statistic array nums[..], 'nums[i] = v' represents there are 'v' cities which is
+//   'i' distance from capital
+// For example
+//   index    0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+//   paths = [9, 1, 4, 9, 0, 4, 8, 9, 0, 1]
+//   The connection would be,
+//
+//              1
+//              |
+//              9
+//             /
+//            /\
+//           /\ \
+//          /  \ \
+//         0   3  7
+//        /\
+//       /  \
+//      4    8
+//     /\     \
+//    /  \     \
+//   2    5     6
+//
+//   then the nums would be,
+//   nums  = [1, 1, 3, 2, 3, 0, 0, 0, 0, 0]
+
+
+// Solution, 2 steps:
+//  1. turn path array to a distance array
+//                  index    0, 1,  2,  3,  4,  5,  6,  7,  8,  9
+//     For exampel, dist = [-2, 0, -4, -2, -3, -4, -4, -2, -3, -1]
+//  2. turn the distance array to statistical array
+
+// 'vdist[i] = j' represents city 'i' is '|j|' distance from capital
+// j is negative, though then absolute value of it is the distance
+void get_city_dist_array(const std::vector<int>& paths, std::vector<int>& vdist) {
+    vdist.clear();
+    if(paths.empty()) {
+        return ;
+    }
+
+    // Copy from original paths
+    std::copy(paths.begin(), paths.end(), vdist);
+    // Turn the path array to a distance array
+    int capital = -1;
+    for(std::size_t i = 0; i < paths.size(); i++ ) {
+    	if(paths[i] == i) {
+    		capital = i;
+    		continue;
+    	}
+    	if(paths[i] < 0) {
+    		continue;
+    	}
+
+		int curi = i;
+		int nexti = paths[curi];
+		paths[curi] = -1;
+		while(paths[nexti] > 0 && paths[nexti] != nexti) {
+			int prei = curi;
+			curi = nexti;
+			nexti = paths[curi];
+			paths[curi] = prei;
+		}
+		int dist = paths[nexti] < 0 ? paths[nexti] : -1;
+		while(paths[curi] != -1) {
+			int prei = paths[curi];
+			paths[curi] = dist--;
+			curi = prei;
+		}
+		paths[curi] = dist;
+    }
+    // Capital
+    paths[capital] = 0;
+}
+
+void get_city_count_array(std::vector<int>& vdist) {
+	if(vdist.empty()) {
+		return ;
+	}
+
+	const int length = vdist.size();
+	for(int i = 0; i < length; i++) {
+		if(vdist[i] >= 0) {
+			continue;
+		}
+		int nexti = std::abs(vdist[i]);
+		vdist[i] = 0;
+		while(vdist[nexti] < 0) {
+			int tmp = vdist[nexti];
+			vdist[nexti] = 1;
+			nexti = std::abs(tmp);
+		}
+		vdist[nexti]++;
+	}
+	vdist[0] = 1;
+}
+
+const std::vector<int> get_city_statistical_array(const std::vector<int>& paths) {
+	std::vector<int> res;
+	if(paths.empty()) {
+		return res;
+	}
+
+	// Paths -> dist array
+	get_city_dist_array(paths, res);
+	// dist array -> statistical array
+	get_city_count_array(res);
+
+	return res;
+}
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.14 First unformed sum in a positive array
+
+// Solution(Dynamic Programming):
+//   The total sum of this array is SUM = sum(arr[0..N-1])
+//   Get a DP array dp[0..SUM-1], length is 'SUM'
+//   dp[j] = True/False represents if 'j' can be formed.
+// Key:
+//   if arr[0..j] can form sum 'k', then arr[0..j,j+1] can form sum 'k + arr[j+1]'
+
+int get_first_unformed_sum(const std::vector<int>& arr) {
+	if(arr.empty()) {
+		return -1;
+	}
+	int sum = std::accumulate(arr.begin(), arr.end(), 0);
+	int min = std::min_element(arr.begin(), arr.end());
+	const int length = arr.size();
+	std::vector<bool> dp(sum + 1, false);
+	dp[0] = true;
+	for(int i = 0; i < length; i++) {
+		for(int j = sum; j >= arr[i]; j--) {
+			dp[j] = dp[j - arr[i]] ? true : dp[j];
+		}
+	}
+	for(std::size_t i = min; i != dp.size(); i++) {
+		if(!dp[i]) {
+			return i;
+		}
+	}
+	return sum + 1;
+}
+
+// [TIME_STAMP] Stop at 13:36, 2018/01/21
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // [TIME_STAMP] Start at XX, 2017/XX/XX
 // [TIME_STAMP] Stop at XX, 2017/XX/XX
