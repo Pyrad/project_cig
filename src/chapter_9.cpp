@@ -24,6 +24,9 @@ void test_9_XX() {
 
 	res = get_first_unformed_number_0(arr);
 	printf("RES: %d\n", res);
+
+	res = get_first_unformed_sum(arr);
+	printf("RES: %d\n", res);
 }
 
 

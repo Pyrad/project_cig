@@ -747,18 +747,17 @@ double randXPowerK(int k) {
 //
 //              1
 //              |
-//              9
-//             /
-//            /\
-//           /\ \
-//          /  \ \
-//         0   3  7
-//        /\
-//       /  \
-//      4    8
-//     /\     \
-//    /  \     \
-//   2    5     6
+//         _____9____
+//         |    |    |
+//         |    |    |
+//         0    3    7
+//       __|__
+//       |    |
+//       |    |
+//       4    8
+//      _|_   |
+//     |   |  |
+//     2   5  6
 //
 //   then the nums would be,
 //   nums  = [1, 1, 3, 2, 3, 0, 0, 0, 0, 0]
@@ -779,37 +778,38 @@ void get_city_dist_array(const std::vector<int>& paths, std::vector<int>& vdist)
     }
 
     // Copy from original paths
-    std::copy(paths.begin(), paths.end(), vdist);
+    std::copy(paths.begin(), paths.end(), vdist.begin());
     // Turn the path array to a distance array
     int capital = -1;
-    for(std::size_t i = 0; i < paths.size(); i++ ) {
-    	if(paths[i] == i) {
+    const int vlen = vdist.size();
+    for(int i = 0; i < vlen; i++ ) {
+    	if(vdist[i] == i) {
     		capital = i;
     		continue;
     	}
-    	if(paths[i] < 0) {
+    	if(vdist[i] < 0) {
     		continue;
     	}
 
 		int curi = i;
-		int nexti = paths[curi];
-		paths[curi] = -1;
-		while(paths[nexti] > 0 && paths[nexti] != nexti) {
+		int nexti = vdist[curi];
+		vdist[curi] = -1;
+		while(vdist[nexti] > 0 && vdist[nexti] != nexti) {
 			int prei = curi;
 			curi = nexti;
-			nexti = paths[curi];
-			paths[curi] = prei;
+			nexti = vdist[curi];
+			vdist[curi] = prei;
 		}
-		int dist = paths[nexti] < 0 ? paths[nexti] : -1;
-		while(paths[curi] != -1) {
-			int prei = paths[curi];
-			paths[curi] = dist--;
+		int dist = vdist[nexti] < 0 ? vdist[nexti] : -1;
+		while(vdist[curi] != -1) {
+			int prei = vdist[curi];
+			vdist[curi] = dist--;
 			curi = prei;
 		}
-		paths[curi] = dist;
+		vdist[curi] = dist;
     }
     // Capital
-    paths[capital] = 0;
+    vdist[capital] = 0;
 }
 
 void get_city_count_array(std::vector<int>& vdist) {
@@ -858,19 +858,28 @@ const std::vector<int> get_city_statistical_array(const std::vector<int>& paths)
 // Key:
 //   if arr[0..j] can form sum 'k', then arr[0..j,j+1] can form sum 'k + arr[j+1]'
 
+void print_bool_vector(const std::vector<bool>& bv) {
+	BOOST_FOREACH(bool v, bv) {
+		std::cout << (v ? "* " : "- ");
+	}
+	std::cout << std::endl;
+}
+
 int get_first_unformed_sum(const std::vector<int>& arr) {
 	if(arr.empty()) {
 		return -1;
 	}
 	int sum = std::accumulate(arr.begin(), arr.end(), 0);
-	int min = std::min_element(arr.begin(), arr.end());
+	int min = *std::min_element(arr.begin(), arr.end());
 	const int length = arr.size();
 	std::vector<bool> dp(sum + 1, false);
 	dp[0] = true;
+	print_bool_vector(dp); // Debug use
 	for(int i = 0; i < length; i++) {
 		for(int j = sum; j >= arr[i]; j--) {
 			dp[j] = dp[j - arr[i]] ? true : dp[j];
 		}
+		print_bool_vector(dp); // Debug use
 	}
 	for(std::size_t i = min; i != dp.size(); i++) {
 		if(!dp[i]) {
