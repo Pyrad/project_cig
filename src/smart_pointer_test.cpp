@@ -5,6 +5,11 @@
  *      Author: Pyrad
  */
 
+
+#ifndef USE_DEPRECATED_FEATURES
+#define USE_DEPRECATED_FEATURES 0
+#endif // USE_DEPRECATED_FEATURES
+
 #include<stdio.h>
 #include "smart_pointer_test.hpp"
 
@@ -27,7 +32,7 @@
 
 namespace smart_pointer_test {
 
-
+#if USE_DEPRECATED_FEATURES
 void test_std_autoptr() {
 	std::auto_ptr<Simple> my_memory(new Simple(1));
 	if(my_memory.get()) {
@@ -71,7 +76,7 @@ void test_std_autoptr_2() {
 		delete p;
 	}
 }
-
+#endif // USE_DEPRECATED_FEATURES
 
 
 void test_scoped_ptr() {
@@ -189,9 +194,11 @@ void test_alpha_beta() {
 
 
 void run_smart_pointer_test() {
+#if USE_DEPRECATED_FEATURES
 	test_std_autoptr();
 	test_std_autoptr_1();
 	test_std_autoptr_2();
+#endif // USE_DEPRECATED_FEATURES
 
 	test_scoped_ptr();
 

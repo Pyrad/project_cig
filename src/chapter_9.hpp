@@ -892,15 +892,806 @@ int get_first_unformed_sum(const std::vector<int>& arr) {
 // [TIME_STAMP] Stop at 13:36, 2018/01/21
 
 
+// [TIME_STAMP] Start at 12:32, 2018/01/27
+//
+// The problem of sum of a subset in an array
+// Given an positive array arr[0...N-1]
+// Given an positive integer M
+// If any subset in the array's sum can form M?
+
+bool subset_can_form_a_sum(const std::vector<int>& arr, const int asum) {
+    // Assume all integers in arr is positive
+    // Assume asum is positive
+    const int len = arr.size();
+    int **dp = CU::get_matrix(len + 1, asum + 1);
+
+    bool res = false;
+
+    // dp[i][j] means the subset of arr[0..i] can form sum 'j' or not
+    // 0 <= i <= len, total 'len + 1'
+    // 0 <= j <= asum, total 'asum + 1'
+
+    // first row
+    // dp[0][j] means the subset of arr[0..0] can form sum 'j'
+    // Obviously not, so all of them(dp[0][j], 0<=j<=asum) are '0's
+    for(int j = 0; j < asum + 1; j++) {
+        dp[0][j] = 0;
+    }
+
+    // first column
+    // dp[i][0] means the subset of arr[0...i] can form sum '0'
+    // Obviously they can.
+    for(int i = 0; i < len + 1; i++) {
+        dp[i][0] = 1;
+    }
+
+    // Pay attention to dp[0][0], obviously it is '1'
+
+    // for the rest
+    // (1) if dp[i - 1][j] is '1', then dp[i][j] is '1' too.(Obviously)
+    // (2) if dp[i - 1][j] is '0', then investigate dp[i - 1][j - arr[i]]
+    //     if dp[i - 1][j - arr[i]] == '1', then after the i-th element included,
+    //     the subset of arr[0..i] certainly can form sum 'j', since the subset of
+    //     arr[0..i-1] can form 'j-arr[i]', and the i-th element is 'arr[i]'
+    //     so it should be '1'
+    //     if dp[i - 1][j - arr[i]] == '0', which means there's no subset of arr[0..i-1]
+    //     can form sum 'j-arr[i]', so even after i-th element is included,
+    //     the sum 'j' can't be formed either.
+    for(int i = 1; i < len + 1; i++) {
+        for(int j = 0; j < asum + 1; j++) {
+            if(dp[i-1][j] == 1) {
+                dp[i][j] = 1;
+            } else {
+                if(j - arr[i] >= 0) {
+                    dp[i][j] = dp[i-1][j-arr[i]] == 1 ? 1 : 0;
+                } else {
+                    dp[i][j] = 0;
+                }
+            }
+        }
+    }
+
+    res = dp[len][asum];
+    CU::free_matrix(dp, len + 1, asum + 1);
+
+    return res;
+} /* func subset_can_form_a_sum*/
+
+// So anther solution for 9.14 would be the following
+bool first_unformed_sum(const std::vector<int>& arr) {
+    // Assume all integers in arr is positive
+    const int len = arr.size();
+    const int vmin = *std::min_element(arr.begin(), arr.end());
+    const int vmax = std::accumulate(arr.begin(), arr.end(), 0);
+    int **dp = CU::get_matrix(len + 1, vmax + 1);
+
+    int res = -1;
+
+    for(int j = 0; j < vmax + 1; j++) {
+        dp[0][j] = 0;
+    }
+
+    for(int i = 0; i < len + 1; i++) {
+        dp[i][0] = 1;
+    }
+
+    for(int i = 1; i < len + 1; i++) {
+        for(int j = 0; j < vmax + 1; j++) {
+            if(dp[i-1][j] == 1) {
+                dp[i][j] = 1;
+            } else{
+                if(j - arr[i] >= 0) {
+                    dp[i][j] = dp[i-1][j-arr[i]] == 1 ? 1 : 0;
+                } else {
+                    dp[i][j] = 0;
+                }
+            }
+        }
+    }
+
+    for(int j = vmin; j < vmax + 1; j++) {
+        if(dp[len][j] == 0) {
+            res = j;
+            break;
+        }
+    }
+    if(res == -1) {
+        res = vmax + 1;
+    }
+    CU::free_matrix(dp, len + 1, vmax + 1);
+
+    return res;
+} /* func subset_can_form_a_sum*/
+
+// Advanced problem
+// Assume integer '1' is in the array
+// get the min unformed sum
+// ----------------------------------------------------------------------
+// Solution:
+    // if array[0..i-1] can form sums of [1..range]
+    // then after array[i] is included, the total range can be extended.
+    // 1. for [0..range], array[0..i-1] can form every element inside
+    // 2. for [range + 1, ..., 2 * range], array[0..i-1] together with array[i]
+    //    can form every one of them
+    //    Anlaysis:
+    //    (1) Assume array[i] is 1, then exists the sum of subset(array[0..i-1]) is range, thus
+    //              SUM(subset(array[0..i-1])) + array[i] ==> range + 1
+    //
+    //    (2) Assume array[i] is 2, then exists subset(array[0..i-1]) is range - 1, thus
+    //              SUM(subset(array[0..i-1])) + array[i] ==> range + 1
+    //        and also exists subset(array[0..i-1]) + array[i] is range, thus
+    //              SUM(subset(array[0..i-1])) + array[i] ==> range + 2
+    //
+    //    (3) Assume array[i] is 3, then exists subset(array[0..i-1]) is range - 2, thus
+    //              SUM(subset(array[0..i-1])) + array[i] ==> range + 1
+    //        and also exists subset(array[0..i-1]) is range - 1, thus
+    //              SUM(subset(array[0..i-1])) + array[i] ==> range + 2
+    //        and also exists subset(array[0..i-1]) is range, thus
+    //              SUM(subset(array[0..i-1])) + array[i] ==> range + 3
+    //
+    //        ... ...
+    //
+    //    (#) Assume array[i] is range, then exists subset(array[0..i-1]) is 1, which is 'range - (range - 1)', thus
+    //              SUM(subset(array[0..i-1])) + array[i] ==> range + 1
+    //        and also exists subset(array[0..i-1]) is 2, thus
+    //              SUM(subset(array[0..i-1])) + array[i] ==> range + 2
+    //        ... ...
+    //        and also exists subset(array[0..i-1]) is range, thus
+    //              SUM(subset(array[0..i-1])) + array[i] ==> range + range
+    //    (#) Assume array[i] is range + 1,
+    //        then first you could use array[i] alone to form sum 'range + 1'
+    //              SUM(array[i]) = range + 1
+    //        then exists subset(array[0..i-1]) is 1, thus
+    //              SUM(subset(array[0..i-1])) + array[i] ==> range + 2
+    //        and also exists subset(array[0..i-1]) is 2, thus
+    //              SUM(subset(array[0..i-1])) + array[i] ==> range + 3
+    //        ... ...
+    //        and also exists subset(array[0..i-1]) is range, thus
+    //              SUM(subset(array[0..i-1])) + array[i] ==> range + range + 1
+    //    (#) Assume array[i] is range + 2,
+    //        then you can not use any one of element in array[0...i-1] and array[i] to form 'range + 2'
+    //        So the max value of array[i] should be 'range + 1'
+int get_min_unformed_sum_if_1_exists(const std::vector<int>& arr) {
+    // Assume all elements in arr is positive
+    // Assume integer '1' is in the arr
+    int res = -1;
+    if(arr.empty()) {
+        return res;
+    }
+
+    std::vector<int> array(arr);
+    // after sorting, array[0] must be 1, because all elements are positive
+    std::sort(array.begin(), array.end());
+    // when iterating to 'i'-th element, range means [1..range]
+    // can be formed by array[0..i-1]
+    int range = 0;
+    const int len = array.size();
+    for(int i = 0; i < len; i++) {
+        if(array[i] > range + 1) {
+            res = range + 1;
+            break;
+        } else {
+            range += array[i];
+        }
+    }
+    return res == -1 ? range + 1 : res;
+} /* func get_min_unformed_sum_if_1_exists */
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.15 Use a specified char array, convert a string to Int & int to string
+//
+// For example, char array is
+//    chars [] = {'A', 'B', 'C', 'D', ..., 'Z'}
+// then 'A', 'B', ... 'Z', 'AA', 'AB', ..., 'AZ', 'BA', 'BB', ..., 'ZZ', 'AAA', ..., 'ZZZ', 'AAAA', ...
+// represent 1, 2, 3, ..., 26, 27, 28, ..., 52, 53, 54, 702, 703, ..., 18278, 18279, ...
+// Another example
+//    chars [] = {'A', 'B', 'C'}
+// then 'A', 'B', 'C', 'AA', 'AB', ..., 'CC', 'AAA', ..., 'CCC', 'AAAA', ...
+// represent 1, 2, 3, 4, 5, ..., 12, 13, ..., 39, 40, ...
+
+// Use std::string to mimic char array
+const std::string get_string_from_int_using_char_array(const std::string &carray, const int num) {
+    if(carray.empty() || num <= 0) {
+        return "";
+    }
+
+    int cur = 1;
+    int n = num;
+    int len = 0;
+    int base = carray.size();
+    // First calculate how many chars width(length) to use for this number to convert
+    // Assume the length of carray is 'B', then each char from right to left represents values below
+    // ..., B^6, B^5, B^4, B^3, B^2, B, 1
+    while(cur <= n) {
+        n -= cur;
+        len++;
+        cur *= base;
+    }
+
+    std::string res(len, carray.at(0));
+    int idx = 0; // from high end to low end
+    int n_cur = 0;
+    do {
+        cur /= base;
+        n_cur = n / cur;
+        assert(n_cur >= 1);
+        res[idx++] = carray[n_cur - 1];
+        n %= cur;
+    } while(idx < len);
+
+    return res;
+} /* func get_string_from_int_using_char_array */
+
+
+int char_position_in_char_array(const std::string &carray, const char &c) {
+    if(carray.empty() || c > 'z' || c < 'A') {
+        return 0;
+    }
+    int res = -1;
+    const int len = carray.size();
+    for(int i = 0; i < len; i++) {
+        if(c == carray[i]) {
+            res = i + 1;
+            break;
+        }
+    }
+
+    return res;
+}
+
+const int get_int_from_string_using_char_array(const std::string &carray, const std::string &str) {
+    if(carray.empty() || str.empty()) {
+        return -1;
+    }
+
+    int base = carray.size();
+    int len = str.size();
+    int curbase = 1;
+    int res = 0;
+    for(int i = len - 1; i > -1; i--) {
+        res += curbase * char_position_in_char_array(carray, str[i]);
+        curbase *= base;
+    }
+
+    return res;
+} /* func get_int_from_string_using_char_array */
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.16 How many time does '1' occur from 1 ~ n ?
+
+// A high complextiy solution: check every number for '1'
+
+int one_number(int n) {
+    int cnt = 0;
+    while(n > 0) {
+        cnt = (n % 10 == 1) ? cnt + 1 : cnt;
+        n /= 10;
+    }
+
+    return cnt;
+}
+
+int how_many_ones_in_range1toN(const int n) {
+    int res = 0;
+    for(int i = 1; i < n + 1; i++) {
+        res += one_number(i);
+    }
+
+    return res;
+}
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.17 Equally print M numbers in an array which length is N(N >= M)
+// Requirements:
+// (1) Don't print duplicated numbers
+// (2) Can change original array
+
+void print_m_numbers_in_n_length_array(const std::vector<int> &ivec, const int m) {
+    if(ivec.empty() || m <= 0 || (std::size_t)m > ivec.size()) {
+        return ;
+    }
+
+    std::vector<int> dvec(ivec);
+    int count = 0;
+    const int len = dvec.size();
+    while(count < m) {
+        int pos = CU::gen_random_int_1(0, len - count - 1);
+        printf("%d ", ivec[pos]);
+        // Swap the element in 'pos' to the end
+        int tmp = dvec[pos];
+        dvec[pos] = dvec[len - count - 1];
+        dvec[len - count - 1] = tmp;
+        count++;
+    }
+} /* func print_m_numbers_in_n_length_array */
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.18 Check if a number is palindrome
+
+bool check_number_is_palindrome(const int num) {
+    int n = std::abs(num);
+    int help = 1;
+    while(help < n) {
+        help *= 10;
+    }
+    if(help == 1) {
+        return true;
+    }
+
+    while(n > 0) {
+        if(n / help != n % 10) {
+            return  false;
+        }
+        n = (n % help) / 10;
+        help /= 10;
+    }
+
+    return true;
+}
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.19 Find the min value in a rotated array which had ascending order before
+// Notice, the array has ascending order before rotatation
+
+int min_value_in_rotated_array(const std::vector<int> & arr) {
+    if(arr.empty()) {
+        return -1;
+    }
+
+    const int len = arr.size();
+    int low = 0;
+    int high = len - 1;
+    while(low < high) {
+        if(low == high - 1 ) {
+            break;
+        }
+
+        if(arr[low] < arr[high]) {
+            return arr[low];
+        }
+
+        // Situation: Now arr[low] >= arr[high]
+
+        int mid = (low + high) / 2;
+        if(arr[low] > arr[mid]) { // Situation: if not, then arr[low] <= arr[mid]
+            high = mid;
+            continue;
+        }
+        if(arr[mid] > arr[high]) { // Situation: if not, then arr[mid] <= arr[high]
+            low = mid;
+            continue;
+        }
+        // According to the situations above
+        // Now arr[low] == arr[mid] == arr[high]
+        // Starting from low, walking towards 'mid'
+        int i = low;
+        while(i != mid) {
+            if(arr[i] < arr[low]) {
+                return arr[i];
+            } else if(arr[i] > arr[low]) {
+                // this situation means arr[mid] < arr[i] too
+                // So the min value(or the cliff-point) is in range [i..mid]
+                low = i;
+                high = mid;
+                break;
+            } else {
+                i++;
+            }
+        }
+        // If all values are the same in [low..mid]
+        // then the min value(or the cliff-pointl) is in range [mid..high]
+        if(i == mid) {
+            low = mid;
+        }
+    }
+
+    return std::min(arr[low], arr[high]);
+
+} /* min_value_in_rotated_array */
+
+// [TIME_STAMP] Stop at 17:07, 2018/01/27
 
 
 
+// [TIME_STAMP] Start at 13:11, 2018/01/28
+// --------------------------------------------------------------------------------------------------------------
+// 9.20 Find a number in a rotated(or might not be roated) array
+// Notice, the array is original in order and it might be rotated or not
+// the array may contain duplicated numbers
+
+// Solution is binary search
+// First iterate 'low' to make sure 'arr[low]', 'arr[mid]' and 'arr[high]' are not
+//   all the same
+//
+// then the break-point(where the array is rotated) could be the following situations
+//   (1) low <= mid <= high <= break
+//   (2) low <= mid <= break <= high
+//   (3) low <= break <= mid <= high
+//   (4) break <= low <= mid <= high
+//
+//  if arr[low] != arr[mid]
+//    (a) if arr[low] < arr[mid], then (1)(2)(4) statisfy this case
+//        thus 1) if arr[low] <= num && num <= arr[mid], then search range [low, mid]
+//             2) if arr[low] > num || num > arr[mid], then search range [mid, high]
+//    (b) if arr[low] > arr[mid], then (3) statisfy this case
+//        thus 1) if arr[mid] <= num && num <= arr[high], then search range [mid, high]
+//             2) if arr[mid] > num || num > arr[high], then search range [low, mid]
+//  if arr[mid] != arr[high]
+//    (a) if arr[mid] < arr[high], then (1)(3)(4) statisfy this case
+//        thus 1) if arr[mid] <= num && num <= arr[high], then search range [mid, high]
+//             2) if arr[mid] > num || num > arr[high], then search range [low, mid]
+//    (b) if arr[mid] > arr[high], then (2) statisfy this case
+//        thus 1) if arr[low] <= num && num <= arr[mid], then search range [low, mid]
+//             2) if arr[low] > num || num > arr[mid], then search range [mid, high]
+int find_number_value_in_rotated_array(const std::vector<int> & arr, const int num) {
+    if(arr.empty()) {
+        return -1;
+    }
+
+    const int len = arr.size();
+    int low = 0;
+    int high = len - 1;
+    int mid = 0;
+    int res = -1;
+
+    while(low < high) {
+        mid = (low + high) / 2;
+        if(arr[mid] == num) {
+            res = mid;
+            break;
+        }
+
+        // First iterate 'low' to make sure 'arr[low]', 'arr[mid]'
+        // and 'arr[high]' are not all the same
+        if(arr[low] == arr[mid] && arr[mid] == arr[high]) {
+            while(low != mid && arr[low] == arr[mid]) {
+                low++;
+            }
+            if(low == mid) {
+                low = mid + 1;
+                continue;
+            }
+        }
+
+        if(arr[low] != arr[mid]) {
+            if(arr[low] < arr[mid]) {
+                if(arr[low] <= num && num <= arr[mid]) {
+                    high = mid - 1;
+                } else { // arr[low] > num || num > arr[mid]
+                    low = mid + 1;
+                }
+            } else { // arr[low] > arr[mid]
+                if(arr[mid] <= num && num <= arr[high]) {
+                    low = mid + 1;
+                } else { // arr[mid] > num || num > arr[high]
+                    high = mid - 1;
+                }
+            }
+        } else { // arr[mid] != arr[high]
+            if(arr[mid] < arr[high]) {
+                if(arr[mid] <= num && num <= arr[high]) {
+                    low = mid + 1;
+                } else { // arr[mid] > num || num > arr[high]
+                    high = mid - 1;
+                }
+            }
+        }
+    } // while-loop
+
+    return res;
+
+} /* fucn find_number_value_in_rotated_array */
 
 
+// --------------------------------------------------------------------------------------------------------------
+// 9.21 Represent a number(32-bit) in English and Chinese
+//
+//
+// Sample
+//  English: -2,147,483,648
+//    Negative, two billion, one hundred forty seven million, four hundred, eighty three thousand, six hundred, forty eight
+//  Chinese: -21,4748,3648, -13,5129,4576
+//    FU ER #SHI# YI YI[U], SI #QIAN# QI #BAI# SI #SHI# BA WAN[U], SAN #QIAN# LIU #BAI# SI #SHI# BA
+//    FU YI #SHI# SAN YI[U], WU #QIAN# YI #BAI# ER #SHI# JIU WAN[U], SI #QIAN# WU #BAI# QI #SHI# LIU
+
+class numberToLanguageExpression {
+public:
+    numberToLanguageExpression(int number) : m_num(number) { }
+    ~numberToLanguageExpression() { }
+
+public:
+    const std::string toEnglishExpression(int num) const;
+    const std::string toChineseExpression(int num) const;
+
+protected:
+    const std::string toEnglish1to19(int num) const;
+    const std::string toEnglish1to99(int num) const;
+    const std::string toEnglish1to999(int num) const;
+protected:
+    const std::string toChinese1to9(int num) const;
+    const std::string toChinese1to99(int num, bool hasBAI) const;
+    const std::string toChinese1to999(int num) const;
+    const std::string toChinese1to9999(int num) const;
+    const std::string toChinese1to99999999(int num) const;
+
+private:
+    int m_num;
+}; /* class numberToLanguageExpression */
 
 
+const std::string numberToLanguageExpression::
+toEnglishExpression(int num) const {
+    static std::vector<std::string> ubase = {"Billion", "Million", "Thousand", ""};
+    if(num == 0) {
+        return "zero";
+    }
+    std::string res;
+    if(num < 0) {
+        res = "Negative, ";
+    }
+    // In case of overflow
+    if(num == INT_MIN) {
+        res + "Two Billion, ";
+        num %= -2000000000; // 2 billion
+    }
+
+    num = std::abs(num);
+    int high = 1000000000;
+    int idx = 0;
+    while(num != 0) {
+        int cur = num / high;
+        num %= high;
+        if(cur != 0) {
+            res += toEnglish1to999(cur);
+            res += ubase[idx] + (num == 0 ? " " : ", ");
+        }
+        high /= 1000;
+        idx++;
+    }
+
+    return res;
+}
+
+const std::string numberToLanguageExpression::
+toChineseExpression(int num) const {
+    std::string res;
+    if(num == 0) {
+        return "zero";
+    }
+    if(num < 0) {
+        res += "#FU# ";
+    }
+    num = std::abs(num);
+    int t = num / 100000000;
+    int r = num % 100000000;
+    if(t == 0) {
+        res += toChinese1to99999999(t);
+        return res;
+    }
+    res += toChinese1to99(t, false) + " *YI* ";
+    if(r == 0) {
+        return res;
+    } else {
+        if(r < 10000000) {
+            res += " *LING* " + toChinese1to99999999(r);
+        } else {
+            res += toChinese1to99999999(r);
+        }
+    }
+
+    return res;
+}
+
+const std::string numberToLanguageExpression::
+toEnglish1to19(int num) const {
+    static std::vector<std::string> nEng1to19 = {"one", "two", "three", "four", "five", "sixe", "seven", "eight", "nine", "ten",
+                                "eleven", "tewlve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"};
+    if(num > 19 || num < 1) {
+        return "";
+    }
+
+    return nEng1to19[num - 1];
+}
+
+const std::string numberToLanguageExpression::
+toEnglish1to99(int num) const {
+    static std::vector<std::string> nEng20to90 = {"twenty", "thirdty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"};
+    if(num < 1 || num > 99) {
+        return "";
+    }
+    if(num < 20) {
+        return toEnglish1to19(num);
+    }
+
+    std::string res(nEng20to90[num / 10 - 1]);
+    res += " ";
+    res += toEnglish1to19(num % 10);
+
+    return res;
+}
+
+const std::string numberToLanguageExpression::
+toEnglish1to999(int num) const {
+    if(num < 1 || num > 999) {
+        return "";
+    }
+
+    if(num < 100) {
+        return toEnglish1to99(num);
+    }
+
+    std::string res(toEnglish1to19(num / 100));
+    res += " hundred ";
+    res += toEnglish1to99(num % 100);
+    return res;
+}
+
+const std::string numberToLanguageExpression::
+toChinese1to9(int num) const {
+    static std::vector<std::string> onames = {"YI", "ER", "SAN", "SI", "WU", "LIU", "QI", "BA", "JIU"};
+    if(num < 1 || num > 9) {
+        return "";
+    }
+
+    return onames[num - 1];
+}
+
+const std::string numberToLanguageExpression::
+toChinese1to99(int num, bool hasBAI) const {
+    if(num < 1 || num > 99) {
+        return "";
+    }
+    if(num < 10) {
+        return toChinese1to9(num);
+    }
+    std::string res = toChinese1to9(num / 10);
+    if(num / 10 == 1 && (!hasBAI)) {
+        res += " *SHI* " + toChinese1to9(num % 10);
+    } else {
+        res += toChinese1to9(1) + " *SHI* " + toChinese1to9(num % 10);
+    }
+    return res;
+}
 
 
+const std::string numberToLanguageExpression::
+toChinese1to999(int num) const {
+    if(num < 1 || num > 999) {
+        return "";
+    }
+    if(num < 100) {
+        return toChinese1to99(num, false);
+    }
+    std::string res;
+    res += toChinese1to9(num / 100) + " *BAI*";
+    if(num % 100 == 0) {
+        return res;
+    } else if((num % 100) >= 10) {
+        res += toChinese1to99(num % 100, true);
+    } else { // num % 100 < 10
+        res += " *LING* " + toChinese1to9(num % 100);
+    }
+    return res;
+}
+
+const std::string numberToLanguageExpression::
+toChinese1to9999(int num) const {
+    if(num < 1 || num > 9999) {
+        return "";
+    }
+    if(num < 1000) {
+        return toChinese1to999(num);
+    }
+    std::string res;
+    res += toChinese1to9(num / 1000) + " *QIAN*";
+    if(num % 1000 == 0) {
+        return res;
+    } else if((num % 1000) >= 100) {
+        res += toChinese1to999(num % 1000);
+    } else { // num % 1000 < 100
+        res += " *LING* " + toChinese1to99(num % 1000, false);
+    }
+    return res;
+}
+
+const std::string numberToLanguageExpression::
+toChinese1to99999999(int num) const {
+    if(num < 1 || num > 99999999) {
+        return "";
+    }
+    std::string res;
+    int t = num / 10000;
+    int r = num % 10000;
+    if(t == 0) {
+        res += toChinese1to9999(t);
+        return res;
+    }
+    res += toChinese1to9999(t) + " *WAN* ";
+    if(r == 0) {
+        return res;
+    } else {
+        if(r < 1000) {
+            res += " *LING* " + toChinese1to999(r);
+        } else {
+            res += toChinese1to9999(r);
+        }
+    }
+
+    return res;
+}
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.22 Candy distribution
+
+// Start from i-th on, value begin to increase
+// so, from 'start' to 'res', elements are in descending order
+int next_min_index(const std::vector<int> &arr, int start) {
+    int res = -1;
+    if(arr.empty()) {
+        return res;
+    }
+    const int len = arr.size();
+    for(int i = start; i < len - 1; i++) {
+        if(arr[i] < arr[i + 1]) { // Notice, it shouldn't reach boundary
+            res = i;
+            break;
+        }
+    }
+
+    res = res == -1 ? len - 1 : res;
+    return res;
+}
+
+// Candies to distribute for the right slope(descending slope)
+int right_slope_candies(const std::vector<int> &arr, int begin, int end) {
+    assert(end >= begin);
+    int num = end - begin + 1;
+    // sum of 1 to num
+    return (num + 1) * num / 2;
+}
+
+int total_candies_to_distribute(const std::vector<int> &arr) {
+    if(arr.empty()) {
+        return 0;
+    }
+    int idx = next_min_index(arr, 0);
+    int res = right_slope_candies(arr, 0, idx);
+    idx++;
+    const int len = arr.size();
+    int lnum = 1; // From the bottom of a slope, the candy for start one is 1.
+    while(idx < len) {
+        if(arr[idx - 1] < arr[idx]) {
+            lnum++;
+            res += lnum;
+            idx++;
+        } else if(arr[idx - 1] > arr[idx]){
+            int next = next_min_index(arr, idx - 1);
+            int rcands = right_slope_candies(arr, idx - 1, next);
+            next++;
+            int rnum = next - idx + 1;
+            if(rnum > lnum) {
+                res += rcands - lnum;
+            } else {
+                res += rcands - rnum;
+            }
+            lnum = 1;
+            idx = next;
+        } else {
+            // for those equall to the one before, assign just 1 candy
+            res += 1;
+            lnum = 1;
+            idx++;
+        }
+    }
+
+    return res;
+} /* func total_candies_to_distribute */
+
+// [TIME_STAMP] Stop at 19:06, 2018/01/28
 
 
 
@@ -948,3 +1739,4 @@ int get_first_unformed_sum(const std::vector<int>& arr) {
 } // namespace C9
 
 #endif /* CHAPTER_9_HPP_ */
+
