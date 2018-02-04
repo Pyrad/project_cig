@@ -20,10 +20,14 @@
 #include <assert.h>
 #include <string>
 #include <iostream>
+#include <memory>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <list>
+#include <forward_list>
 #include <set>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 #include <numeric>
@@ -1626,7 +1630,10 @@ toChinese1to99999999(int num) const {
 
 // --------------------------------------------------------------------------------------------------------------
 // 9.22 Candy distribution
+// (1) Basic problem
+// (2) Advanced problem
 
+// (1) Basic problem
 // Start from i-th on, value begin to increase
 // so, from 'start' to 'res', elements are in descending order
 int next_min_index(const std::vector<int> &arr, int start) {
@@ -1654,6 +1661,7 @@ int right_slope_candies(const std::vector<int> &arr, int begin, int end) {
     return (num + 1) * num / 2;
 }
 
+// arr[0..N-1] is the score array
 int total_candies_to_distribute(const std::vector<int> &arr) {
     if(arr.empty()) {
         return 0;
@@ -1665,13 +1673,16 @@ int total_candies_to_distribute(const std::vector<int> &arr) {
     int lnum = 1; // From the bottom of a slope, the candy for start one is 1.
     while(idx < len) {
         if(arr[idx - 1] < arr[idx]) {
+            // Calculate candies for ascending slope in this while loop
             lnum++;
             res += lnum;
             idx++;
-        } else if(arr[idx - 1] > arr[idx]){
+        } else if(arr[idx - 1] > arr[idx]) {
             int next = next_min_index(arr, idx - 1);
             int rcands = right_slope_candies(arr, idx - 1, next);
             next++;
+            // now 'lnum' is the total length of previous left slope(ascending order)
+            // and 'rnum' is the total length of right slope(descending order)
             int rnum = next - idx + 1;
             if(rnum > lnum) {
                 res += rcands - lnum;
@@ -1681,7 +1692,7 @@ int total_candies_to_distribute(const std::vector<int> &arr) {
             lnum = 1;
             idx = next;
         } else {
-            // for those equall to the one before, assign just 1 candy
+            // for those equal to the one before, assign just 1 candy
             res += 1;
             lnum = 1;
             idx++;
@@ -1694,6 +1705,625 @@ int total_candies_to_distribute(const std::vector<int> &arr) {
 // [TIME_STAMP] Stop at 19:06, 2018/01/28
 
 
+
+// [TIME_STAMP] Start at 12:34, 2018/02/04
+
+// (2) Advanced problem
+// For those whose scores are equal must get equal candies.
+
+// get the last index of right slope(descending order slope)
+int next_min_index_2(const std::vector<int> &arr, int start) {
+    int res = -1;
+    const int len = arr.size();
+    for(int i = start; i < len; i++) {
+        if(arr[i] <= arr[i + 1]) {
+            res = i;
+            break;
+        }
+    }
+    
+    return res == -1 ? len - 1 : res;
+}
+
+// Candies to distribute for the right slope(descending slope)
+// Equal scores get equal candies
+std::pair<int, int> right_slope_candies_and_base(const std::vector<int> &arr, int begin, int end) {
+    int base = 1;
+    int cands = 1; // start from the last one
+    for(int i = end - 1; i >= begin; i--) {
+        if(arr[i] == arr[i + 1]) {
+            cands += base;
+        } else {
+            cands += ++base;
+        }
+    }
+
+    // cands --> total candies for the right slope
+    // base  --> the candies for the top, calculated based on the right slope
+    return std::make_pair(cands, base);
+}
+
+// arr[0..N-1] is the score array
+int total_candies_to_distribute_2(const std::vector<int> &arr) {
+    if(arr.empty()) {
+        return 0;
+    }
+    const int len = arr.size();
+    int idx = next_min_index_2(arr, 0);
+    std::pair<int, int> data(right_slope_candies_and_base(arr, 0, idx));
+    idx++;
+    int res = data.first;
+    int lnum = 1;
+    int next = 0;
+    int same = 1;
+
+    while(idx < len) {
+        if(arr[idx - 1] < arr[idx]) {
+            lnum++;
+            res += lnum;
+            idx++;
+        } else if(arr[idx - 1] > arr[idx]) {
+            next = next_min_index_2(arr, idx - 1);
+            data = right_slope_candies_and_base(arr, idx - 1, next);
+            if(data.second <= lnum) {
+                // left slope is longer than the right slope
+                res += data.first - data.second;
+            } else {
+                // left slope is shorter than the right slope
+                res += data.second * same - lnum * same + data.first - data.second;
+            }
+            idx = ++next;
+            lnum = 1;
+            same = 1;
+        } else {
+            // arr[idx - 1] == arr[idx]
+            res += lnum;
+            same++;
+            idx++;
+        }
+    } // while-loop
+
+    return res;
+}
+
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.23 Design a system to print messages recieved following a rule
+// Rule
+// 1. Message stream generates '2', system recieves '2' but don't print, since '1' hasn't appear yet
+// 2. Message stream generates '1', system recieves '1' and prints '1, 2'
+// 3. Message stream generates '4', system recieves '4' but don't print, since '3' hasn't appear yet
+// 4. Message stream generates '5', system recieves '5' but don't print, since '3' hasn't appear yet
+// 5. Message stream generates '7', system recieves '7' but don't print, since '3' hasn't appear yet
+// 6. Message stream generates '3', system recieves '3' and prints '3, 4, 5'
+// 7. Message stream generates '9', system recieves '9' but don't print, since '6' hasn't appear yet
+// 8. Message stream generates '8', system recieves '8' but don't print, since '6' hasn't appear yet
+// 9. Message stream generates '6', system recieves '8' and prints '6, 7, 8, 9'
+//
+// That is to say, if a message stream generates 1~N(integers)
+// Recieve system recieves but doesn't print in the recieved order
+// If last time 'i' is printed, then if 'i+1' appears, print 'i+1' and the all the successive integers
+// following recieved.
+
+class MessageBoxSystem {
+public:
+    MessageBoxSystem() = default;
+    ~MessageBoxSystem() {
+        for(auto i : recyle) {
+            if(i != nullptr) {
+                delete i;
+                i = nullptr;
+            }
+        }
+    }
+
+public:
+    void recieve(int num);
+    void print();
+
+private:
+    std::unordered_map<int, CU::lnode*> headMap;
+    std::unordered_map<int, CU::lnode*> tailMap;
+    std::unordered_set<int> nset;
+    std::forward_list<CU::lnode*> recyle;
+    int lastPrint;
+}; /* class MessageBoxSystem */
+
+
+void MessageBoxSystem::
+recieve(int num) {
+    if(nset.find(num) != nset.end()) {
+        // num must be unique
+        return ;
+    } else {
+        nset.insert(num);
+    }
+
+    CU::lnode *pnode = new CU::lnode(num);
+    // In case of memory leak
+    recyle.push_front(pnode);
+    headMap[num] = pnode;
+    tailMap[num] = pnode;
+
+    auto i = tailMap.find(num - 1);
+    if(i != tailMap.end()) {
+        i->second->next = pnode;
+        tailMap.erase(i); // or use tailMap.erase(num - 1)
+        auto e = headMap.find(num);
+        headMap.erase(e);
+    }
+
+    auto j = headMap.find(num + 1);
+    if(j != headMap.end()) {
+        pnode->next = j->second;
+        headMap.erase(j); // or use headMap.erase(num + 1)
+        auto e = tailMap.find(num);
+        tailMap.erase(e);
+    }
+
+} /* member func MessageBoxSystem::recieve */
+
+void MessageBoxSystem::
+print() {
+    // Check if to print
+    auto k = headMap.find(lastPrint + 1);
+    if(k == headMap.end()) {
+        return ;
+    }
+
+    // next to print is "lastPrint + 1"
+    lastPrint++;
+    // Now from 'lastPrint' on, the list will be printed
+    headMap.erase(lastPrint);
+
+    CU::lnode *p = k->second;
+    while(!p) {
+        std::cout << "Value is: " << p->value << "\n";
+        p = p->next;
+        lastPrint++;
+    }
+
+    // Now 'p' is nullptr
+    lastPrint--;
+    tailMap.erase(lastPrint);
+} /* member func MessageBoxSystem::print */
+
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.24 Design a heap which don't need to extend the space
+// Actually it is to say use tree structure other than array(consecutive space) to design a heap
+// Requirements:
+//  1. Can generate a min_root_heap or max_root_heap
+//  2. get_head() -> return the root of the heap
+//  3. get_size() -> return the size of the heap
+//  4. add(x) -> add a new element into the heap
+//  5. pop_head() -> pop the root of the heap and then auto adjust the heap
+
+
+class heap_node {
+public:
+    heap_node(int n) : left(nullptr), right(nullptr), parent(nullptr), value(n) { }
+    ~heap_node() { left = right = parent = nullptr; }
+
+public:
+    heap_node *left;
+    heap_node *right;
+    heap_node *parent;
+    int value;
+}; /* class heap_node */
+
+class customized_compare {
+public:
+    customized_compare(bool b): m_comp(b) { }
+    customized_compare(const customized_compare &cc): m_comp(cc.m_comp) { }
+    customized_compare(const customized_compare *cc): m_comp(cc->m_comp) { }
+    ~customized_compare() { m_comp = false; }
+
+public:
+    inline bool compare(heap_node* n1, heap_node *n2) {
+        return m_comp ? n1->value < n2->value : n1->value > n2->value;
+    }
+
+public:
+    // True -> min heap
+    // False -> max heap
+    bool m_comp;
+}; /* class customized_compare */
+
+class customized_heap {
+public:
+    customized_heap(const customized_compare &cc) : m_head(nullptr), m_last(nullptr), m_size(0), m_comp(cc) { }
+    ~customized_heap() {
+        clear_all_nodes();
+        m_head = m_last = nullptr;
+        m_size = 0;
+        m_comp = true;
+    }
+
+public:
+    inline heap_node* get_head() { return m_head; }
+    inline const int get_size() const { return m_size; }
+    void add(int n);
+    int pop_head();
+
+public:
+    inline bool empty() { return get_size() == 0; }
+    heap_node* get_node(int n) {
+        heap_node *p = new heap_node(n);
+        m_recyle.push_front(p);
+        return p;
+    }
+    int get_head_value() { 
+        return m_head ? 0 : m_head->value;
+    }
+
+private:
+    void clear_all_nodes() {
+        for(auto i : m_recyle) {
+            if(i != nullptr) {
+                delete i;
+                i = nullptr;
+            }
+        }
+        m_recyle.clear();
+    }
+    void adjust_heap_from_tail();
+    void adjust_heap_from_head();
+    void swap_adjacent_two_nodes(heap_node *n, heap_node *nparent);
+    heap_node* popLastNodeAndUpdateLastNode();
+
+private:
+    heap_node *m_head;
+    heap_node *m_last; // the right most node of the last row in the heap
+    int m_size;
+    customized_compare m_comp; // True - min heap, False - max heap
+
+private:
+    std::forward_list<heap_node*> m_recyle;
+}; /* class customized_heap */
+
+
+void customized_heap::
+add(int n) {
+    heap_node *pnode = get_node(n);
+    if(empty()) {
+        m_head = m_last = pnode;
+        m_size++;
+        return ;
+    }
+
+    heap_node *p = m_last;
+    heap_node *pp = p->parent;
+    while(pp != nullptr && pp->left != p) {
+        p = pp;
+        pp = p->parent;
+    }
+
+    if(pp == nullptr) {
+        // case 1: m_last is the last one of at bottom(now tree is a full-binary-tree)
+        m_last = pnode;
+        heap_node *res = m_head;
+        while(res->left != nullptr) {
+            res = res->left;
+        }
+        res->left = pnode;
+        pnode->parent = res;
+        pnode = m_last;
+    } else if(pp->right == nullptr) {
+        // case 2: parent has no right child
+        pp->right = pnode;
+        pnode->parent = pp;
+        pnode = m_last;
+    } else {
+        // case 3: parent does have right child
+        // get the left most of its right sub-tree
+        heap_node *res = pp->right;
+        while(res->left) {
+            res = res->left;
+        }
+        res->left = pnode;
+        pnode->parent = res;
+        pnode = m_last;
+    }
+
+    m_size++;
+    adjust_heap_from_tail();
+
+} /* member func customized_heap::add */
+
+
+void customized_heap::
+adjust_heap_from_tail() {
+    heap_node *p = m_last;
+    heap_node *pp = m_last->parent;
+    heap_node *lp = nullptr;
+    if(pp != nullptr && !m_comp.compare(p, pp)) {
+        lp = pp;
+    }
+
+    while(pp != nullptr && !m_comp.compare(p, pp)) {
+        // Notice arguments order, 'pp' is parent of 'p'
+        swap_adjacent_two_nodes(p, pp);
+        pp = p->parent;
+        // no need to change 'p' since its pointer remain unchanged
+    }
+
+    // the head of the heap has changed
+    if(m_head->parent != nullptr) {
+        m_head = m_head->parent;
+    }
+
+    if(m_last->left || m_last->right){
+        m_last = lp;
+    }
+} /* member func customized_heap::adjust_heap_from_tail */
+
+void customized_heap::
+swap_adjacent_two_nodes(heap_node *n, heap_node *parent) {
+    if(!n || !parent) {
+        return ;
+    }
+
+    heap_node *parentParent = parent->parent;
+    heap_node *parentLeft= parent->left;
+    heap_node *parentRight = parent->right;
+    heap_node *nodeLeft = n->left;
+    heap_node *nodeRight = n->right;
+
+    // Just in case parent is head of the heap
+    if(parentParent) {
+        if(parent == parentParent->left) {
+            parentParent->left = n;
+        } else{
+            parentParent->right = n;
+        }
+    }
+    n->parent = parentParent;
+
+    if(n == parentRight) {
+        if(parentLeft) {
+            parentLeft->parent = n;
+        }
+        parent->parent = n;
+        n->left = parentLeft;
+        n->right = parent;
+        if(nodeLeft) {
+            nodeLeft->parent = parent;
+            parent->left = nodeLeft;
+        } else {
+            parent->left = nullptr;
+        }
+        if(nodeRight){
+            nodeRight->parent = parent;
+            parent->right = nodeRight;
+        } else {
+            parent->right = nullptr;
+        }
+    } else { // n == parentLeft
+        if(parentRight) {
+            parentRight->parent = n;
+        }
+        parent->parent = n;
+        n->left = parent;
+        n->right = parentRight;
+        if(nodeLeft) {
+            nodeLeft->parent = parent;
+            parent->left = nodeLeft;
+        } else {
+            parent->left = nullptr;
+        }
+        if(nodeRight){
+            nodeRight->parent = parent;
+            parent->right = nodeRight;
+        } else {
+            parent->right = nullptr;
+        }
+    }
+
+} /* member func customized_heap::swap_adjacent_two_nodes */
+
+
+int customized_heap::
+pop_head() {
+    if(empty()) {
+        printf("Heap is empty!\n");
+        return -1;
+    }
+
+    int res = m_head->value;
+    if(get_size() == 1) {
+        m_head = nullptr;
+        m_last = nullptr;
+        m_size = 0;
+        return res;
+    }
+
+    heap_node *node = popLastNodeAndUpdateLastNode();
+    if(m_head->left) {
+        m_head->left->parent = node;
+    }
+    if(m_head->right) {
+        m_head->right->parent = node;
+    }
+    node->left = m_head->left;
+    node->right = m_head->right;
+    node->parent = nullptr;
+
+    adjust_heap_from_head();
+
+    return res;
+
+} /* member func customized_heap::pop_head */
+
+heap_node* customized_heap::
+popLastNodeAndUpdateLastNode() {
+    if(empty()) {
+        return nullptr;
+    }
+
+    heap_node *res = m_last;
+
+    heap_node *p = m_last;
+    heap_node *pp = p->parent;
+    while(pp != nullptr && pp->right != p) {
+        p = pp;
+        pp = p->parent;
+    }
+
+    if(pp == nullptr) {
+        // case 1: m_last is the first one at the bottom(now tree is a full-binary-tree)
+        heap_node *l = m_head;
+        while(l->right != nullptr) {
+            l = l->right;
+        }
+        m_last = l;
+        heap_node *rp = res->parent;
+        if(res == rp->left) {
+            rp->left = nullptr;
+        } else {
+            rp->right = nullptr;
+        }
+        res->parent = nullptr;
+    } else {
+        heap_node *l = pp->left;
+        while(l->right) {
+            l = l->right;
+        }
+        m_last = l;
+        heap_node *rp = res->parent;
+        if(res == rp->left) {
+            rp->left = nullptr;
+        } else {
+            rp->right = nullptr;
+        }
+        res->parent = nullptr;
+    }
+
+    m_size--;
+    return res;
+
+} /* member func customized_heap::popLastNodeAndUpdateLastNode */
+
+void customized_heap::
+adjust_heap_from_head() {
+    heap_node *p = m_head;
+    heap_node *left = p->left;
+    heap_node *right = p->right;
+    heap_node *most = p;
+    while(left) {
+        if(left && !m_comp.compare(left, p)) {
+            most = left;
+        }
+        if(right && !m_comp.compare(right, p)) {
+            most = right;
+        }
+        if(most == p) {
+            break;
+        }
+        // Notice arguments order, 'pp' is parent of 'p'
+        swap_adjacent_two_nodes(most, p);
+        left = p->left;
+        right = p->right;
+        most = p;
+    }
+
+    if(p->parent == m_last) {
+        m_last = p;
+    }
+
+    while(p->parent) {
+        p = p->parent;
+    }
+    m_head = p;
+
+} /* member func customized_heap::adjust_heap_from_head */
+
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.25 Get the median of a data stream at any time
+// Notice, use the heap structure 
+// use the heap constructing by binary tree instead of array
+// Use the solution of 9.24
+
+class median_holder {
+public:
+    median_holder();
+    ~median_holder();
+
+public:
+    void add_number_from_data_stream(int n);
+    int get_median_in_data_stream();
+
+private:
+    std::shared_ptr<customized_heap> m_min_heap;// Store the max half of all recieved till now
+    std::shared_ptr<customized_heap> m_max_heap;// Store the min half of all recieved till now
+
+}; /* class median_holder */
+
+median_holder::
+~median_holder()
+{
+}
+
+median_holder::
+median_holder() : 
+    m_min_heap(new customized_heap(customized_compare(true))),
+    m_max_heap(new customized_heap(customized_compare(false)))
+{
+} /* ctor of class median_holder */
+
+void median_holder::
+add_number_from_data_stream(int n) {
+    if(m_max_heap->empty()) {
+        m_min_heap->add(n);
+    }
+
+    if(m_max_heap->get_head_value() >= n) {
+        m_max_heap->add(n);
+    } else {
+        if(m_min_heap->empty()) {
+            m_min_heap->add(n);
+        }
+        if(m_min_heap->get_head_value() > n) {
+            m_max_heap->add(n);
+        } else {
+            m_min_heap->add(n);
+        }
+    }
+
+    if(m_max_heap->get_size() == m_min_heap->get_size() + 2) {
+        m_min_heap->add(m_max_heap->pop_head());
+    }
+    if(m_min_heap->get_size() == m_max_heap->get_size() + 2) {
+        m_max_heap->add(m_min_heap->pop_head());
+    }
+
+} /* member func median_holder::add_number_from_data_stream */
+
+int median_holder::
+get_median_in_data_stream() {
+    const int maxSize = m_max_heap->get_size();
+    const int minSize = m_min_heap->get_size();
+    if(maxSize == 0 && minSize == 0) {
+        std::printf("No data recieved yet\n");
+        return -1;
+    }
+
+    if(maxSize > minSize) {
+        return m_max_heap->get_head_value();
+    } else if(maxSize < minSize) {
+        return m_min_heap->get_head_value();
+    } else {
+        return (m_max_heap->get_head_value() + m_min_heap->get_head_value()) / 2;
+    }
+
+} /* member func median_holder::get_median_in_data_stream */
+
+
+// [TIME_STAMP] Stop at 18:02, 2018/02/04
 
 
 
