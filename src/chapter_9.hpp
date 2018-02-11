@@ -2326,6 +2326,314 @@ get_median_in_data_stream() {
 // [TIME_STAMP] Stop at 18:02, 2018/02/04
 
 
+// [TIME_STAMP] Start at 13:11, 2018/02/10
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.26 Get the median(former one) from two sorted arrays of a same size
+//
+// Because the sum of two arrarys' size is even, so get the two median number and return the less one
+int get_former_median_of_two_size_equal_sorted_arraies(const std::vector<int> &arr1, const std::vector<int> &arr2) {
+    int res = -1;
+    if(arr1.size() != arr2.size() || arr1.empty()) {
+        return res;
+    }
+
+    if(arr1.size() == 1) {
+        return arr1.front() > arr2.front() ? arr1.front() : arr2.front();
+    }
+
+    int start1 = 0;
+    int end1 = arr1.size() - 1;
+    int start2 = 0;
+    int end2 = arr2.size() - 2;
+
+    int mid1 = 0;
+    int mid2 = 0;
+
+    while(start1 < end1) {
+        mid1 = (start1 + end1) / 2;
+        mid2 = (start2 + end2) / 2;
+        if(arr1[mid1] == arr2[mid2]) {
+            return arr1[mid1]; // or return arr2[mid2]
+        } else if(arr1[mid1] > arr2[mid2]) {
+            if((end1 - start1 + 1) % 2 != 0) { // odd size
+                end1 = mid1;
+                start2 = mid2;
+            } else { // even size
+                end1 = mid1;
+                start2 = mid2 + 1;
+            }
+        } else { // arr1[mid1] < arr2[mid2]
+            if((end1 - start1 + 1) % 2 != 0) { // odd size
+                start1 = mid1;
+                end2 = mid2;
+            } else { // even size
+                start1 = mid1 + 1;
+                end2 = mid2;
+            }
+        }
+    }
+
+    return std::min(arr1[start1], arr2[start2]);
+} /* func get_former_median_of_two_size_equal_sorted_arrays */
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.27 Get K-th element in two sorted arrarys of a same size
+
+int _helpGetFormerMedian(const std::vector<int> &arr1, const std::vector<int> &arr2, int s1, int e1, int s2, int e2) {
+    int res = -1;
+    if(arr1.size() != arr2.size() || arr1.empty()) {
+        return res;
+    }
+
+    if(arr1.size() == 1) {
+        return arr1.front() > arr2.front() ? arr1.front() : arr2.front();
+    }
+
+    int mid1 = 0;
+    int mid2 = 0;
+
+    while(s1 < e1) {
+        mid1 = (s1 + e1) / 2;
+        mid2 = (s2 + e2) / 2;
+        if(arr1[mid1] == arr2[mid2]) {
+            return arr1[mid1]; // or return arr2[mid2]
+        } else if(arr1[mid1] > arr2[mid2]) {
+            if((e1 - s1 + 1) % 2 != 0) { // odd size
+                e1 = mid1;
+                s2 = mid2;
+            } else { // even size
+                e1 = mid1;
+                s2 = mid2 + 1;
+            }
+        } else { // arr1[mid1] < arr2[mid2]
+            if((e1 - s1 + 1) % 2 != 0) { // odd size
+                s1 = mid1;
+                e2 = mid2;
+            } else { // even size
+                s1 = mid1 + 1;
+                e2 = mid2;
+            }
+        }
+    }
+
+    return std::min(arr1[s1], arr2[s2]);
+} /* func _helpGetFormerMedian */
+
+int get_kth_element_in_two_sorted_arrays(const std::vector<int> &arr1, const std::vector<int> &arr2, const int k) {
+    // arr1 and arr2 must not be empty
+    // arr1 and arr2 can be of different size
+    if(arr1.empty() || arr2.empty()) {
+        return -1;
+    }
+
+    // short & long length
+    const int slen = std::min(arr1.size(), arr2.size());
+    const int llen = std::max(arr1.size(), arr2.size());
+    if(k <= 0 || k > slen + llen) {
+        return -1;
+    }
+
+    // long array and short array
+    const std::vector<int> &a1 = slen == (int)arr1.size() ? arr1 : arr2;
+    const std::vector<int> &a2 = llen == (int)arr1.size() ? arr1 : arr2;
+
+
+    if(k <= slen) {
+        return _helpGetFormerMedian(a1, a2, 0, k - 1, 0, k - 1);
+    } else if(k > llen) { // don't forget now k <= slen + llen
+        if(a1[k - llen - 1] > a2[llen - 1]) {
+            return a1[k - llen - 1];
+        }
+        if(a2[k - slen - 1] > a1[slen - 1]) {
+            return a2[k - slen - 1];
+        }
+        return _helpGetFormerMedian(a1, a2, k - llen, slen - 1, k - slen, llen - 1);
+    } else { // (k > slen && k <= llen)
+        if(a2[k - slen - 1] > a1[slen - 1]) {
+            return a2[k - slen - 1];
+        }
+        return _helpGetFormerMedian(a1, a2, 0, slen - 1, k - slen, k - 1);
+    }
+} /* func get_kth_element_in_two_size_equal_sorted_arrays */
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.28 The TOP-K sum of two number from two arrarys separately
+// Notice, the 2 arrarys could be different sizes
+// The two number must come from 2 arrarys separately
+// K sum number will be returned
+
+class heapNode {
+public:
+    int m_row;
+    int m_col;
+    int m_value;
+public:
+    heapNode& operator=(const heapNode &n) {
+        m_row = n.m_row;
+        m_col = n.m_col;
+        m_value = n.m_value;
+        return *this;
+    }
+    bool operator==(const heapNode &n) const {
+        if(m_row != n.m_row) {
+            return false;
+        }
+        if(m_col != n.m_col) {
+            return false;
+        }
+        if(m_value != n.m_value) {
+            return false;
+        }
+        return true;
+    }
+public:
+    heapNode() : m_row(-1), m_col(-1), m_value(-1) { }
+    heapNode(int r, int c, int v) : m_row(r), m_col(c), m_value(v) { }
+}; /* heapNode */
+
+// size is the current heap size
+void heapInsert(std::vector<heapNode*> &h, int size, int row, int col, int value) {
+    if(h.empty()) {
+        return ;
+    }
+    h[size] = new heapNode(row, col, value);
+    // filter up
+    int idx = size;
+    int parent = (idx - 1) / 2;
+    while(idx >= 0) {
+        if(h[idx]->m_value > h[parent]->m_value) {
+            heapNode *p = h[idx];
+            h[idx] = h[parent];
+            h[parent] = p;
+        } else {
+            break;
+        }
+        idx = parent;
+        parent = (idx - 1) / 2;
+    }
+}
+
+void filterDown(std::vector<heapNode*> &h, int idx, int size) {
+    int left = idx * 2 + 1;
+    int right = idx * 2 + 2;
+    int largest = idx;
+    while(left < size) {
+        if(h[largest]->m_value < h[left]->m_value) {
+            largest = left;
+        }
+        if(right < size && h[largest]->m_value < h[right]->m_value) {
+            largest = right;
+        }
+        if(largest == idx) {
+            break;
+        }
+        heapNode *p = h[largest];
+        h[largest] = h[idx];
+        h[idx] = p;
+        idx = largest;
+        left = idx * 2 + 1;
+        right = idx * 2 + 2;
+    }
+}
+
+heapNode* popHead(std::vector<heapNode*> &h, int size) {
+    heapNode *p = h[0];
+    h[0] = h[size - 1];
+    h[size - 1] = NULL;
+    // filter down from 0-th item
+    filterDown(h, 0, size - 1);
+
+    return p;
+}
+
+bool inHeapNodeCollection(const std::forward_list<heapNode*> &l, int r, int c) {
+    for(auto pp : l) {
+        if(pp->m_row == r && pp->m_col == c) {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::vector<int> top_k_sum_from_two_arrays(const std::vector<int> &arr1, const std::vector<int> &arr2, const int k) {
+    std::vector<int> res;
+    if(arr1.empty() || arr2.empty()) {
+        return res;
+    }
+    const int m = arr1.size();
+    const int n = arr2.size();
+    if(k < 1 || k > m * n) {
+        return res;
+    }
+
+    std::vector<heapNode*> heap(k + 1, NULL);
+    int heapsize = 0;
+    int headR = m - 1;
+    int headC = n - 1;
+    std::set<heapNode*> coll;// recycle
+    std::forward_list<heapNode*> sset;
+    heapInsert(heap, heapsize++, headR, headC, arr1[headR] + arr2[headC]);
+    while(res.size() != (std::size_t)k) {
+        heapNode *p = popHead(heap, heapsize--);
+        res.push_back(p->m_value);
+        coll.insert(p);
+        headR = p->m_row;
+        headC = p->m_col;
+        if(headR != 0 && !inHeapNodeCollection(sset, headR - 1, headC)) {
+            heapInsert(heap, heapsize++, headR - 1, headC, arr1[headR - 1] + arr2[headC]);
+            sset.push_front(heap[heapsize - 1]); // a new node was inserted into index 'heapsize - 1'
+        }
+        if(headC != 0 && !inHeapNodeCollection(sset, headR, headC - 1)) {
+            heapInsert(heap, heapsize++, headR, headC - 1, arr1[headR] + arr2[headC - 1]);
+            sset.push_front(heap[heapsize - 1]); // a new node was inserted into index 'heapsize - 1'
+        }
+    }
+
+    // Clean up
+    for(auto &p : heap) {
+        if(p != nullptr) {
+            delete p;
+            p = nullptr;
+        }
+    }
+    for(auto p : coll) {
+        if(p != nullptr) {
+            delete p;
+            p = nullptr;
+        }
+    }
+
+    return res;
+} /* top_k_sum_from_two_arrays */
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.29 Print k strings whose times appeared rank in top k
+
+std::vector<std::string> get_top_k_times_strings(const std::vector<std::string> &vstr, int k) {
+    std::vector<std::string> res;
+    const int len = vstr.size();
+    if(k < 1 || k > len) {
+        return res;
+    }
+
+    std::map<std::string, int> smap;
+    for(const auto &s : vstr) {
+        if(smap.find(s) == smap.end()) {
+            smap[s] = 1;
+        } else {
+            smap[s]++;
+        }
+    }
+
+    return res;
+}
+
+// [TIME_STAMP] Stop at 17:24, 2018/02/10
 
 
 
@@ -2369,4 +2677,5 @@ get_median_in_data_stream() {
 } // namespace C9
 
 #endif /* CHAPTER_9_HPP_ */
+
 
