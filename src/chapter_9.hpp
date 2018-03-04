@@ -2350,7 +2350,7 @@ int get_former_median_of_two_size_equal_sorted_arraies(const std::vector<int> &a
 
     int mid1 = 0;
     int mid2 = 0;
-
+    
     while(start1 < end1) {
         mid1 = (start1 + end1) / 2;
         mid2 = (start2 + end2) / 2;
@@ -2394,7 +2394,7 @@ int _helpGetFormerMedian(const std::vector<int> &arr1, const std::vector<int> &a
 
     int mid1 = 0;
     int mid2 = 0;
-
+    
     while(s1 < e1) {
         mid1 = (s1 + e1) / 2;
         mid2 = (s2 + e2) / 2;
@@ -2544,7 +2544,7 @@ heapNode* popHead(std::vector<heapNode*> &h, int size) {
     heapNode *p = h[0];
     h[0] = h[size - 1];
     h[size - 1] = NULL;
-    // filter down from 0-th item
+    // filter down from 0-th item 
     filterDown(h, 0, size - 1);
 
     return p;
@@ -2613,6 +2613,76 @@ std::vector<int> top_k_sum_from_two_arrays(const std::vector<int> &arr1, const s
 
 // --------------------------------------------------------------------------------------------------------------
 // 9.29 Print k strings whose times appeared rank in top k
+// Including 2 issues
+//  (1)
+//  (2) Design a TopKRecord structure, which will print top k strings 
+//      at any time
+
+// Solution to issue (1)
+
+// Word Times Node
+// also available for solution to issue(2)
+class wtnode {
+public:
+    wtnode() : m_str(std::string()), m_times(0) { }
+    wtnode(const std::string &str, int t) : m_str(str), m_times(t) { };
+
+public:
+    std::string m_str;
+    int m_times;
+
+};
+
+// Filter up for min root heap
+void heap_insert(std::vector<wtnode*> &h, int pos, wtnode *n) {
+    const int sz = h.size();
+    assert(sz > pos);
+    assert(pos >= 0);
+    h[pos] = n;
+    int parent = (pos - 1) / 2;
+    while(parent >= 0) {
+        if(h[pos]->m_times < h[parent]->m_times) {
+            wtnode *tmp = h[parent];
+            h[parent] = h[pos];
+            h[pos] = tmp;
+            pos = parent;
+            parent = (pos - 1) / 2;
+        } else {
+            break;
+        }
+    }
+}
+
+void heapify(std::vector<wtnode*> &h, int sz) {
+    assert(!h.empty());
+    int i = 0;
+    int left = i * 2 + 1;
+    int right = i * 2 + 2;
+    while(left < sz) {
+        int j = i;
+        if(h[left]->m_times < h[j]->m_times) {
+            j = left;
+        }
+        if(right < sz && h[right]->m_times < h[j]->m_times) {
+            j = right;
+        }
+        if(j == i) {
+            break;
+        }
+
+        wtnode *tmp = h[i];
+        h[i] = h[j];
+        h[j] = tmp;
+
+        i = j;
+        left = i * 2 + 1;
+        right = i * 2 + 2;
+    }
+}
+
+bool cmpFunc(wtnode *pa, wtnode *pb) {
+    return pa->m_times < pb->m_times;
+}
 
 std::vector<std::string> get_top_k_times_strings(const std::vector<std::string> &vstr, int k) {
     std::vector<std::string> res;
@@ -2630,52 +2700,487 @@ std::vector<std::string> get_top_k_times_strings(const std::vector<std::string> 
         }
     }
 
+    int cnt = 0;
+    // min root heap
+    std::vector<wtnode*> heap(k, nullptr);
+    for(const auto &p : smap) {
+        if(cnt < k) {
+            wtnode *n = new wtnode(p.first, p.second);
+            heap_insert(heap, cnt, n);
+            cnt++;
+        } else {
+            if(p.second > heap.front()->m_times) {
+                wtnode *n = new wtnode(p.first, p.second);
+                wtnode *d = heap.front();
+                heap[0] = nullptr;
+                if(d) { delete d; }
+                heap[0] = n;
+                heapify(heap, heap.size());
+            }
+        }
+    }
+
+    // Print in order
+    std::sort(heap.begin(), heap.end(), cmpFunc);
+
+    res.clear();
+    for(int i = 0; i < k; i++) {
+        res.emplace_back(heap[i]->m_str);
+    }
+
+    // clean up
+    for(int i = 0; i < k; i++) {
+        wtnode *p = heap[i];
+        heap[i] = nullptr;
+        delete p;
+    }
+
     return res;
 }
 
 // [TIME_STAMP] Stop at 17:24, 2018/02/10
 
 
+// [TIME_STAMP] Start at 16:15, 2018/02/25
+//
+// Solution to issue (2)
+
+class TopKRecord {
+public:
+    TopKRecord(int k) : m_ksize(k), m_cnt(0) {
+        m_heap = std::vector<wtnode*>(m_ksize, nullptr);
+    }
+
+public:
+    void addString(const std::string &s);
+    void printTopK();
+
+private:
+    int heapInsert(std::vector<wtnode*> &h, int pos, wtnode *n); // Insert a node at pos
+    int heapify(std::vector<wtnode*> &h, int sz, int pos); // from pos filter down
+
+private:
+    int m_ksize;
+    int m_cnt;
+    std::map<std::string, int> m_smap; // string & times map
+    std::map<std::string, int> m_pmap; // string & position in m_heap
+    std::vector<wtnode*> m_heap; // min root heap
+}; // class TopKRecord
+
+
+// Filter up, return position in heap after insertion
+int TopKRecord::
+heapInsert(std::vector<wtnode*> &h, int pos, wtnode *n) {
+    const int sz = h.size();
+    assert(sz > pos);
+    assert(pos >= 0);
+    h[pos] = n;
+    int parent = (pos - 1) / 2;
+    while(parent >= 0) {
+        if(h[pos]->m_times < h[parent]->m_times) {
+            wtnode *tmp = h[parent];
+            h[parent] = h[pos];
+            h[pos] = tmp;
+            pos = parent;
+            parent = (pos - 1) / 2;
+        } else {
+            break;
+        }
+    }
+
+    return pos;
+}
+
+int TopKRecord::
+heapify(std::vector<wtnode*> &h, int sz, int pos) {
+    assert(!h.empty());
+    int i = pos;
+    int left = i * 2 + 1;
+    int right = i * 2 + 2;
+    while(left < sz) {
+        int j = i;
+        if(h[left]->m_times < h[j]->m_times) {
+            j = left;
+        }
+        if(right < sz && h[right]->m_times < h[j]->m_times) {
+            j = right;
+        }
+        if(j == i) {
+            break;
+        }
+        // Swap pointers
+        wtnode *tmp = h[i];
+        h[i] = h[j];
+        h[j] = tmp;
+        // Prepare for next loop
+        i = j;
+        left = i * 2 + 1;
+        right = i * 2 + 2;
+    }
+
+    return i;
+}
+
+void TopKRecord::
+addString(const std::string &s) {
+    std::map<std::string, int>::iterator i = m_smap.find(s);
+    if(i == m_smap.end()) {
+        m_smap[s] = 1;
+        if(m_cnt < m_ksize) {
+            wtnode *p = new wtnode(s, 1);
+            int pos = heapInsert(m_heap, m_cnt, p);
+            m_pmap[s] = pos;
+            m_cnt++;
+        }
+    } else {
+        i->second++; // or m_smap[s]++;
+        std::map<std::string, int>::iterator j = m_pmap.find(s);
+        if(j != m_pmap.end()) { // Already in heap
+            int pos = heapify(m_heap, m_cnt, j->second);
+            m_pmap[s] = pos;
+        } else { // not in heap
+            if(m_cnt < m_ksize) {
+                wtnode *p = new wtnode(s, 1);
+                int pos = heapInsert(m_heap, m_cnt, p);
+                m_pmap[s] = pos;
+                m_cnt++;
+            } else {
+                wtnode *p = m_heap.front();
+                if(p->m_times < i->second) {
+                    m_heap[0] = nullptr;
+                    m_pmap.erase(p->m_str);
+                    delete p;
+                    m_heap[0] = new wtnode(i->first/*'s'*/, i->second);
+                    int pos = heapify(m_heap, m_cnt, 0);
+                    m_pmap[s] = pos;
+                }
+            }
+        }
+    }
+}
+
+
+void TopKRecord::
+printTopK() {
+    if(m_cnt == 0) {
+        printf("Warning: No strings inserted yet\n");
+        return ;
+    }
+
+    for(int i = 0; i < m_cnt; i++) {
+        // std::cout << "No. " << i + 1 << ", String: " << m_heap[i]->m_str << ", Times: " << m_heap[i]->m_times << "\n";
+        printf("No. %d, String: %s, Times: %d\n", i + 1, m_heap[i]->m_str.c_str(), m_heap[i]->m_times);
+    }
+}
+
+// [TIME_STAMP] Stop at 17:28, 2018/02/25
+
+
+// [TIME_STAMP] Start at 11:37, 2018/03/04
+// --------------------------------------------------------------------------------------------------------------
+// 9.30 Algorithm Manacher - Get the longest palindrome(substring) of a string
+
+const std::string convert_to_istring(const std::string &s) {
+    std::string res;
+    if(s.empty()) {
+        return res;
+    }
+
+    res.push_back('#');
+    for(const char c : s) {
+        res.push_back(c);
+        res.push_back('#');
+    }
+
+    return res;
+}
+
+
+// pArr[..] - pArr is an array, the size of it is same as istring(converted intermediate string)
+//            represent the radius of max palindrome is center is 'i'
+// pR       - Position, one after the all max radius palindrome before current
+//            Position in the loop
+//            Initial value is -1
+// index    - The center of palindrome when pR is updated
+//            If pR remain unchanged, index remain unchanged
+//            So index is corresponded to pR
+
+
+
+int max_palindrome_size(const std::string &str) {
+    int res = 0;
+    if(str.empty()) {
+        return res;
+    }
+
+    std::string s = convert_to_istring(str);
+    const int len = s.size();
+
+    std::vector<int> pArr(len, 0);
+    int pR = -1;
+    int index = 0;
+
+    int max = std::numeric_limits<int>::min();
+
+    for(int i = 0; i < len; i++) {
+        if(pR - 1 < i) {
+            int u = i;
+            int l = i;
+            while(u < len && l > -1) {
+                if(s[u + 1] == s[l - 1]) {
+                    u++;
+                    l--;
+                    continue;
+                } else {
+                    break;
+                }
+            }
+            pArr[i] = u - i; // or 'i - l'
+            if(pR < u + 1) {
+                pR = u + 1;
+                index = i;
+            }
+        } else { // pR - 1 >= i, i.e. i is inside 'pR - 1'
+            if(i + pArr[2 * index - 1] > pR - 1) {
+                pArr[i] = pR - i;
+            } else if(i + pArr[2 * index - 1] < pR - 1) {
+                pArr[i] = pArr[2 * index - 1];
+            } else { // i + pArr[2 * index - 1] == pR - 1
+                int u = pR - 1;
+                int l = i - pArr[2 * index - 1];
+                while(u < len && l > -1) {
+                    if(s[u + 1] == s[l - 1]) {
+                        u++;
+                        l--;
+                        continue;
+                    } else {
+                        break;
+                    }
+                }
+                pArr[i] = u - i; // or 'i - l'
+                if(pR < u + 1) {
+                    pR = u + 1;
+                    index = i;
+                }
+            }
+        }
+        max = std::max(pArr[i], max);
+    }
+
+    res = max;
+    return res;
+}
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.31 KMP Algorithm
+
+const std::vector<int> get_next_array(const std::string &m) {
+    const int len = m.size();
+    std::vector<int> next(len, 0);
+
+    if(len == 0) {
+        return next;
+    }
+    if(len == 1) {
+        next[0] = -1;
+        return next;
+    }
+    if(len == 2) {
+        next[0] = -1;
+        next[1] = 0;
+        return next;
+    }
+
+    int pos = 2;
+    int cn = 0;
+    while(pos < len) {
+        if(m[pos - 1] == m[cn]) {
+            next[pos++] = ++cn;
+        } else if(cn > 0) {
+            cn = next[cn];
+        } else {
+            next[pos++] = 0;// now cn should be 0
+        }
+    }
+
+    return next;
+}
+
+// Find first position of 'm' in string 's'
+// If not found, return -1
+int kmp(const std::string &s, const std::string &m) {
+    int mi = 0;
+    int si = 0;
+    int mlen = m.size();
+    int slen = s.size();
+
+    std::vector<int> next(get_next_array(m));
+    while(si < slen && mi < mlen) {
+        if(s[si] == m[mi]) {
+            si++;
+            mi++;
+        } else if(next[mi] <= 0) {
+            si++;
+            mi = 0;
+        } else {
+            mi = next[mi];
+        }
+    }
+
+    // Can also be:
+    // return mi == mlen ? si - mi : -1;
+    return mi == mlen ? si - mlen : -1;
+}
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.32 Issue of throwing chess pieces
+
+// Solution 1:
+//  P(N, K) means min throwing times under worst circumstances if floor is N high and
+//          number of chess pieces is K
+//  P(0, K) if floor number is 0, it means no floor, so no need to throw chess piece
+//          Obviously its value is 0
+//  P(N, 1) if there's only one chess piece(K=1), then has to throw N times, obviously
+
+int _chessFloorProcess1(int nLevel, int kChess) {
+    if(nLevel == 0) {
+        return 0;
+    }
+    if(kChess == 1) {
+        return nLevel;
+    }
+    int min = std::numeric_limits<int>::max();
+    for(int i = 1; i < nLevel; i++) {
+        int t = std::max(_chessFloorProcess1(i - 1, kChess - 1) + 1, _chessFloorProcess1(nLevel - i, kChess) + 1);
+        min = std::min(min, t);
+    }
+
+    return min;
+}
+
+int chessFloorProcess1(int nLevel, int kChess)  {
+    if(nLevel < 1 || kChess < 1) {
+        return 0;
+    }
+    return _chessFloorProcess1(nLevel, kChess);
+}
+
+// solution 2: DP solution
+// dp[0][j] - 0
+// dp[i][1] - i
+// dp[i][j] = MIN( MAX(dp[p - 1][j - 1], dp[i - p][j]) ), 1 <= p <= i 
+
+int chessFloorProcess2(int nLevel, int kChess) {
+    int res = 0;
+    if(nLevel < 1 || kChess < 1) {
+        return res;
+    }
+    if(kChess == 1) {
+        return nLevel;
+    }
+    
+    int **dp = CU::get_matrix(nLevel + 1, kChess + 1);
+    for(int k = 1; k < kChess + 1; k++) {
+        dp[0][k] = 0;
+    }
+    for(int i = 1; i < nLevel + 1; i++) {
+        dp[i][1] = i;
+    }
+
+    for(int j = 2; j < kChess + 1; j++) {
+        for(int i = 1; i < nLevel + 1; i++) {
+            int min = std::numeric_limits<int>::max();
+            for(int t = 1; t <= i; t++) {
+                min = std::min(std::max(dp[t - 1][j - 1], dp[i - t][j]), min);
+            }
+            dp[i][j] = min + 1;
+        }
+    }
+    res = dp[nLevel][kChess];
+
+    CU::free_matrix(dp, nLevel, kChess);
+    return res;
+}
+
+
+
+// --------------------------------------------------------------------------------------------------------------
+// 9.33 Artisan-Painter Issue
+// Description:
+//  Given an array(arr), each element is positive and represents the time to finish a painting
+//  besides, given the number of artisan painters(num), and each painter could only finish adjacent
+//  paintings(in the array)
+// Issue:
+//  Get the min time to finish all the paintings
+
+// Solution:
+// Assume dp[i][j] represents the time to finish 'j' + 1 paintings(arr[0..j]) with 'i' artisan painters
+// So,
+// (1) 1..i-1 pinters for arr[0],    painter i for arr[1..j] -> MAX{ dp[i-1][0], SUM(arr[1..j]) } -> T(1)
+// (2) 1..i-1 pinters for arr[0..1], painter i for arr[2..j] -> MAX{ dp[i-1][1], SUM(arr[2..j]) } -> T(2)
+// (3) 1..i-1 pinters for arr[0..2], painter i for arr[3..j] -> MAX{ dp[i-1][2], SUM(arr[3..j]) } -> T(3)
+// ... ...
+// (k) 1..i-1 pinters for arr[0..k], painter i for arr[k+1..j] -> MAX{ dp[i-1][k], SUM(arr[k+1..j]) } -> T(k)
+// ... ...
+// (j) 1..i-1 pinters for arr[0..j-1], painter i for arr[j] -> MAX{ dp[i-1][j-1], SUM(arr[j]) } -> T(j)
+//
+// So last,
+// MinTime = MIN{T(n)}, 1 <= n <= j
+
+int artisanPainterIssue(const std::vector<int> &ivec, const int num) {
+    if(ivec.empty() || num < 1) {
+        return -1;
+    }
+
+    int res = 0;
+    const int n = ivec.size();
+    int **dp = CU::get_matrix(num, n);
+    // Second row
+    dp[1][0] = ivec[0];
+    for(int j = 1; j < n + 1; j++) {
+        dp[1][j] = dp[1][j - 1] + ivec[j];
+    }
+    // First column
+    for(int i = 1; i < num; i++) {
+        dp[i][1] = ivec[0];
+    }
+
+    std::vector<int> sum(n, 0);
+    sum[0] = ivec[0];
+    for(int k = 0; k < n; k++) {
+        sum[k] = sum[k - 1] + ivec[k];
+    }
+
+    for(int i = 2; i < num; i++) {
+        for(int j = 1; j < n; i++) {
+            int min = std::numeric_limits<int>::max();
+            int tmp = sum[j];
+            for(int k = 0; k < j; k++) {
+                tmp -= ivec[k];
+                min = std::min(min, std::max(dp[i - 1][j - 1], tmp));
+            }
+            dp[i][j] = min;
+        }
+    }
+    res = dp[num - 1][n - 1];
+
+    CU::free_matrix(dp, num, n);
+    return res;
+}
+
+// [TIME_STAMP] Stop at 17:11, 2018/03/04
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// [TIME_STAMP] Start at XX, 2017/XX/XX
-// [TIME_STAMP] Stop at XX, 2017/XX/XX
-
-// [TIME_STAMP] Start at XX, 2017/XX/XX
-// [TIME_STAMP] Stop at XX, 2017/XX/XX
+// [TIME_STAMP] Start at XX, 2018/03/XX
+// [TIME_STAMP] Stop at XX, 2018/03/XX
 
 
 } // namespace C9
 
 #endif /* CHAPTER_9_HPP_ */
-
 
