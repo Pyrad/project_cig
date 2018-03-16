@@ -1721,7 +1721,7 @@ int next_min_index_2(const std::vector<int> &arr, int start) {
             break;
         }
     }
-    
+
     return res == -1 ? len - 1 : res;
 }
 
@@ -1955,7 +1955,7 @@ public:
         m_recyle.push_front(p);
         return p;
     }
-    int get_head_value() { 
+    int get_head_value() {
         return m_head ? 0 : m_head->value;
     }
 
@@ -2244,7 +2244,7 @@ adjust_heap_from_head() {
 
 // --------------------------------------------------------------------------------------------------------------
 // 9.25 Get the median of a data stream at any time
-// Notice, use the heap structure 
+// Notice, use the heap structure
 // use the heap constructing by binary tree instead of array
 // Use the solution of 9.24
 
@@ -2269,7 +2269,7 @@ median_holder::
 }
 
 median_holder::
-median_holder() : 
+median_holder() :
     m_min_heap(new customized_heap(customized_compare(true))),
     m_max_heap(new customized_heap(customized_compare(false)))
 {
@@ -2350,7 +2350,7 @@ int get_former_median_of_two_size_equal_sorted_arraies(const std::vector<int> &a
 
     int mid1 = 0;
     int mid2 = 0;
-    
+
     while(start1 < end1) {
         mid1 = (start1 + end1) / 2;
         mid2 = (start2 + end2) / 2;
@@ -2394,7 +2394,7 @@ int _helpGetFormerMedian(const std::vector<int> &arr1, const std::vector<int> &a
 
     int mid1 = 0;
     int mid2 = 0;
-    
+
     while(s1 < e1) {
         mid1 = (s1 + e1) / 2;
         mid2 = (s2 + e2) / 2;
@@ -2544,7 +2544,7 @@ heapNode* popHead(std::vector<heapNode*> &h, int size) {
     heapNode *p = h[0];
     h[0] = h[size - 1];
     h[size - 1] = NULL;
-    // filter down from 0-th item 
+    // filter down from 0-th item
     filterDown(h, 0, size - 1);
 
     return p;
@@ -2615,7 +2615,7 @@ std::vector<int> top_k_sum_from_two_arrays(const std::vector<int> &arr1, const s
 // 9.29 Print k strings whose times appeared rank in top k
 // Including 2 issues
 //  (1)
-//  (2) Design a TopKRecord structure, which will print top k strings 
+//  (2) Design a TopKRecord structure, which will print top k strings
 //      at any time
 
 // Solution to issue (1)
@@ -3070,7 +3070,7 @@ int chessFloorProcess1(int nLevel, int kChess)  {
 // solution 2: DP solution
 // dp[0][j] - 0
 // dp[i][1] - i
-// dp[i][j] = MIN( MAX(dp[p - 1][j - 1], dp[i - p][j]) ), 1 <= p <= i 
+// dp[i][j] = MIN( MAX(dp[p - 1][j - 1], dp[i - p][j]) ), 1 <= p <= i
 
 int chessFloorProcess2(int nLevel, int kChess) {
     int res = 0;
@@ -3080,7 +3080,7 @@ int chessFloorProcess2(int nLevel, int kChess) {
     if(kChess == 1) {
         return nLevel;
     }
-    
+
     int **dp = CU::get_matrix(nLevel + 1, kChess + 1);
     for(int k = 1; k < kChess + 1; k++) {
         dp[0][k] = 0;
@@ -3173,11 +3173,151 @@ int artisanPainterIssue(const std::vector<int> &ivec, const int num) {
 // [TIME_STAMP] Stop at 17:11, 2018/03/04
 
 
+// [TIME_STAMP] Start at 15:49, 2018/03/10
+// --------------------------------------------------------------------------------------------------------------
+// 9.34 Where to build post offices
+// Description:
+// Given an array(int), each element represents the coordinate in the line(1-Dimension) of resident, and
+// given a number(num), select 'num' resident location to build post offices and make sure the total distance
+// of residential location to nearest post office is minimum, the return the total distance as result
+// Notice that the post office could only be built on the location of residents
+
+
+// Solution
+// First, consider the following issue: assume 0 <= i <= j <= N(N is the length of the array),
+// if to choose only on residential place to build one post office, what is the min total distance?
+// Because 0 <= i <= N and 0 <= j <= N and 0 <= i <= j <= N, so the results would be a half matrix
+// Assume w[i][j] represent the min total distance of building only one postoffice in range [i,...,j]
+// then only those above diagnal is required (since i<=j)
+// Obviously, the centeral point(resident) of the array is best place to build the postoffice
+//
+// Situation (1):
+//  If length of arr[i..j - 1] is odd(it indicates 'i' and 'j-1' are either both odd or both even),
+//  then the place(residential coordinate) to build is arr[(i + j - 1)/2], and (i+j-1)/2 is the central
+//  point. Assume the result is w[i][j-1].
+//  Thus in this case, the length of arr[i..j] is even, so it has 2 central points, and the first one is
+//  arr[(i+j)/2], and the second one is arr[(i+j+1)/2], choose either one and the final result(min total
+//  distance) is the same.
+//  Since (i+j)/2 is the same as (i+j-1)/2, so it is the same central point of arr[i..j-1] mentioned above,
+//  So here we choose arr[(i+j)/2].
+//  Thus compared to w[i][j-1], w[i][j] is just contributed by the last residential point arr[j], and its
+//  distance to postoffice is arr[j] - arr[(i+j)/2], so it comes to a conclusion:
+//  w[i][j] = w[i][j-1] + arr[j] - arr[(i+1)/2]
+//
+// Situation (2):
+//  If length of arr[i..j-1] is even, it has 2 central residential point, i.e. arr[(i+j-1)/2] and arr[(i+j)/2]
+//  here we choose the second one to build postoffice(reason see the following)
+//  So similar to situation (1), then the length of arr[i..j] is odd, it has only 1 central point, which is
+//  arr[(i+j)/2], so the additional distance contributed by arr[j] is arr[j] - arr[(i+j)/2]
+//  And now arr[(i+j)/2] is the same residential point in arr[i..j-1], so it comes to a conclusion:
+//  w[i][j] = w[i][j-1] + arr[j] - arr[(i+1)/2]
+//
+// Thus considering the 2 situations above, we have
+//  w[i][j] = w[i][j-1] + arr[j] - arr[(i+1)/2]
+//
+// Notice we don't have to resolve those below diagonal(where i>j), and when i==j, w[i][j] is 0
+//
+// Till now, we have matrix 'w'
+// Use dynamic programming method, dp[a][b] means the min total distance to build 'a' postoffices
+// in [0..b] residentials
+//
+// Leave dp[0][0..N-1] alone since they have no meaning
+// Obviously dp[1][0..N-1] can be directly got from matrix w
+//
+//
+// For the rest:
+//   dp[i][j]
+//   0 <= i <= num
+//   0 <= j <= N - 1
+//   i <= j
+//
+//   i-1 responsible for [0...j-1], i responsible for [j...j]
+//   i-1 responsible for [0...j-2], i responsible for [j-1...j]
+//   i-1 responsible for [0...j-3], i responsible for [j-2...j]
+//   ...
+//   i-1 responsible for [0...i-2], i responsible for [i-1...j]
+//
+//   i-1 responsible for [0..k], i responsible for [k+1..j], i-2 <= k <= j-1
+//   i.e. dp[i-1][k] + w[k+1][j], i-2 <= k <= j-1
 
 
 
-// [TIME_STAMP] Start at XX, 2018/03/XX
-// [TIME_STAMP] Stop at XX, 2018/03/XX
+
+
+int min_distance_from_residents_to_postoffices(const std::vector<int> &arr, const int num) {
+    int res = -1;
+    if(arr.empty() || num <= 0) {
+        return res;
+    }
+    const int N = arr.size();
+    if(num == N) {
+        return 0;
+    }
+    if(num > N) {
+        return res;
+    }
+
+
+    // First get matrix 'w'
+    int **w = CU::get_matrix(N, N);
+
+    // Set all values in w to 0
+    for(int i = 0; i < N; i++) {
+        for(int j = 0; j < N; j++) {
+            w[i][j] = 0;
+        }
+    }
+
+    // Set diagnal to 0
+    // Since now all the values are 0
+    // So this step can be skipped
+
+    // Compute values above diagonal
+    for(int i = 0; i < N; i++) {
+        for(int j = i + 1; j < N; j++) {
+            w[i][j] = w[i][j-1] + arr[j] - arr[(i+j)/2];
+        }
+    }
+
+    int **dp = CU::get_matrix(num + 1, N);
+
+    // Set all values in dp to 0
+    for(int i = 0; i < num + 1; i++) {
+        for(int j = 0; j < N; j++) {
+            dp[i][j] = 0;
+        }
+    }
+
+    // dp[1][0..N-1]
+    for(int j = 0; j < N; j++) {
+        dp[1][j] = w[0][j];
+    }
+
+    // diagonal dp[i+1][i], 0 <= i <= num - 1
+    // dp[i+1][i] means building 'i+1' postoffices for [0,...,i], 0 <= i <= num - 1
+    // Obviously they are all 0
+    for(int k = 0; k < num; k++) {
+        dp[k+1][k] = 0;
+    }
+
+    // Rest
+    for(int i = 2; i <= num; i++) {
+        for(int j = i; j < N; j++) {
+            int min = std::numeric_limits<int>::max();
+            for(int k = j - 1; k >= i - 2; k--) {
+                min = std::min(min, dp[i-1][k] + w[k+1][j]);
+            }
+            dp[i][j] = min;
+        }
+    }
+    res = dp[num][N-1];
+
+    CU::free_matrix(w, N, N);
+    CU::free_matrix(dp, num+1, N);
+
+    return res;
+}
+// [TIME_STAMP] Stop at 17:40, 2018/03/10
 
 
 } // namespace C9
