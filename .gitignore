@@ -3,3 +3,7 @@ objs/
 
 # Ignore binary files created at last
 bin/
+
+# Ignore binary
+run-g
+run
