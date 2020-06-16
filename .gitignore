@@ -1,0 +1,5 @@
+# Ignore objects files
+objs/
+
+# Ignore binary files created at last
+bin/
