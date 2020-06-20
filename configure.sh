@@ -26,12 +26,21 @@ if [[ -f $TAR_MAKEFILE ]]; then
     rm -rf $TAR_MAKEFILE
 fi
 
+CXX_BIN=`which g++`
+if [[ $? == 1 ]]; then
+    echo "Error: g++ is not found"
+    exit
+else
+    echo "g++ is $CXX_BIN"
+fi
+
 cp $MKF_TMPL $TAR_MAKEFILE
 
 ### Don't use '/' in reg expression in sed, as $BOOST_INC_HOME has '/'
 ### in its string value
 sed -i "s#<__BOOST_INC_TO_FILL__>#${BOOST_INC_HOME}#g" $TAR_MAKEFILE
 sed -i "s#<__BOOST_LIB_TO_FILL__>#${BOOST_LIB_HOME}#g" $TAR_MAKEFILE
+sed -i "s#<__CXX_TO_FILL>#${CXX_BIN}#g" $TAR_MAKEFILE
 
 
 ### Clean old objects & binary directory

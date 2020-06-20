@@ -11,7 +11,7 @@ BOOST_INC	:=	<__BOOST_INC_TO_FILL__>
 BOOST_LIB	:=	<__BOOST_LIB_TO_FILL__>
 BOOST_LNK	:=	boost_regex
 
-CXX	:=	/usr/bin/g++
+CXX	:=	<__CXX_TO_FILL>
 
 mkf_name	:=	$(lastword $(MAKEFILE_LIST))
 abs_path	:=	$(abspath $(mkf_name))
