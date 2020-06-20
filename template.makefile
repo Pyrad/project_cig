@@ -7,8 +7,8 @@ TAREGT_BIN_LINK_NAME	:=	$(TAREGT_BIN)
 
 FTYPE	:=	.cpp
 
-BOOST_INC	:=	<__TO_FILL__>
-BOOST_LIB	:=	<__TO_FILL__>
+BOOST_INC	:=	<__BOOST_INC_TO_FILL__>
+BOOST_LIB	:=	<__BOOST_LIB_TO_FILL__>
 BOOST_LNK	:=	boost_regex
 
 CXX	:=	/usr/bin/g++

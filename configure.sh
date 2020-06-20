@@ -22,3 +22,6 @@ if [[ ! -f $MKF_TMPL ]]; then
 fi
 
 cp $MKF_TMPL $TAR_MAKEFILE
+
+sed -i "s/<__BOOST_INC_TO_FILL__>/${BOOST_INC_HOME}/" $TAR_MAKEFILE
+sed -i "s/<__BOOST_LIB_TO_FILL__>/${BOOST_LIB_HOME}/" $TAR_MAKEFILE
