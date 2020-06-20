@@ -32,3 +32,25 @@ cp $MKF_TMPL $TAR_MAKEFILE
 ### in its string value
 sed -i "s#<__BOOST_INC_TO_FILL__>#${BOOST_INC_HOME}#g" $TAR_MAKEFILE
 sed -i "s#<__BOOST_LIB_TO_FILL__>#${BOOST_LIB_HOME}#g" $TAR_MAKEFILE
+
+
+### Clean old objects & binary directory
+OBJ_DIR="./objs"
+BIN_DIR="./bin"
+if [[ -d $OBJ_DIR ]]; then
+    echo "Warning: old objects in dir <$OBJ_DIR> will be removed"
+    rm -rf ${OBJ_DIR}/*
+else
+    echo "Creating directory for objects: $OBJ_DIR"
+    mkdir $OBJ_DIR
+fi
+
+if [[ -d $BIN_DIR ]]; then
+    echo "Warning: old binaries in dir <$BIN_DIR> will be removed"
+    rm -rf ${BIN_DIR}/*
+else
+    echo "Creating directory for objects: $BIN_DIR"
+    mkdir $BIN_DIR
+fi
+
+echo "Target make file created: $TAR_MAKEFILE"
