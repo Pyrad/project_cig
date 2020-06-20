@@ -21,7 +21,14 @@ if [[ ! -f $MKF_TMPL ]]; then
     exit
 fi
 
+if [[ -f $TAR_MAKEFILE ]]; then
+    echo "Warning: removing old $TAR_MAKEFILE"
+    rm -rf $TAR_MAKEFILE
+fi
+
 cp $MKF_TMPL $TAR_MAKEFILE
 
-sed -i "s/<__BOOST_INC_TO_FILL__>/${BOOST_INC_HOME}/" $TAR_MAKEFILE
-sed -i "s/<__BOOST_LIB_TO_FILL__>/${BOOST_LIB_HOME}/" $TAR_MAKEFILE
+### Don't use '/' in reg expression in sed, as $BOOST_INC_HOME has '/'
+### in its string value
+sed -i "s#<__BOOST_INC_TO_FILL__>#${BOOST_INC_HOME}#g" $TAR_MAKEFILE
+sed -i "s#<__BOOST_LIB_TO_FILL__>#${BOOST_LIB_HOME}#g" $TAR_MAKEFILE
