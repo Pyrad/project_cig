@@ -34,6 +34,9 @@ else
     echo "g++ is $CXX_BIN"
 fi
 
+GXX_VER=`g++ --version | head -n 1 | cut -d' ' -f 3`
+echo "g++ version is: ${GXX_VER}"
+
 cp $MKF_TMPL $TAR_MAKEFILE
 
 ### Don't use '/' in reg expression in sed, as $BOOST_INC_HOME has '/'
