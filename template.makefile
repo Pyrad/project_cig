@@ -20,6 +20,7 @@ cur_dir		:=	$(realpath $(cdir))
 sdir		:=	$(cur_dir)/$(SRC_DIR)
 odir		:=	$(cur_dir)/$(OBJ_DIR)
 target		:=	$(cur_dir)/$(BIN_DIR)/$(TAREGT_BIN)
+target_r	:=	$(BIN_DIR)/$(TAREGT_BIN)
 
 all_srcs	:=	$(wildcard $(sdir)/*$(FTYPE))
 build_objs	:=	$(foreach n,$(all_srcs),$(subst $(sdir),$(odir),$n))
@@ -38,6 +39,7 @@ all	: $(build_objs)
 	$(CXX) -L$(BOOST_LIB) -l$(BOOST_LNK) $^ -o $(target)
 	@echo "Create link to $(target)"
 	@ln -s $(target) $(TAREGT_BIN)
+	@ln -s $(target_r) $(TAREGT_BIN)
 
 $(cur_dir)/$(OBJ_DIR)/%.o : $(cur_dir)/$(SRC_DIR)/%.cpp
 	@echo "Building (no linking)"
