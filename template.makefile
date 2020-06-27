@@ -38,7 +38,6 @@ all	: $(build_objs)
 	@echo "linked"
 	$(CXX) -L$(BOOST_LIB) -l$(BOOST_LNK) $^ -o $(target)
 	@echo "Create link to $(target)"
-	@ln -s $(target) $(TAREGT_BIN)
 	@ln -s $(target_r) $(TAREGT_BIN)
 
 $(cur_dir)/$(OBJ_DIR)/%.o : $(cur_dir)/$(SRC_DIR)/%.cpp
