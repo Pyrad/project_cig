@@ -1,13 +1,13 @@
 #!/bin/sh -
 
-if [[ -z $BOOST_INC_HOME ]]; then
+if [ -z "$BOOST_INC_HOME" ]; then
     echo "Env var BOOST_INC_HOME is not found"
     exit
 else
     echo "Found env var BOOST_INC_HOME: $BOOST_INC_HOME"
 fi
 
-if [[ -z $BOOST_LIB_HOME ]]; then
+if [ -z "$BOOST_LIB_HOME" ]; then
     echo "Env var BOOST_LIB_HOME is not found"
     exit
 else
