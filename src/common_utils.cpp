@@ -20,6 +20,8 @@
 #include <vector>
 #include <sstream>
 
+#include <boost/algorithm/string.hpp>
+
 #include "common_utils.hpp"
 
 namespace common_utils {
@@ -130,7 +132,38 @@ node* construct_tree_from_array(const int* nds, int size) {
 }
 
 node* construct_tree_from_full_tree_array(const std::string &str) {
-    return nullptr;
+    if (str.empty()) {
+        return nullptr;
+    }
+
+    std::vector<std::string> svec;
+    boost::split(svec, str, boost::is_any_of(","), boost::token_compress_on);
+
+    int size = svec.size();
+
+    node **p = new node*[size];
+    assert(svec.front() != "#");
+    node *head = new node(std::stoi(svec.front()));
+    p[0] = head;
+
+    for(int i = 1; i < size; ++i) {
+        if (svec[i] == "#") {
+            continue;
+        }
+
+        node *cur = new node(std::stoi(svec[i]));
+        p[i] = cur;
+        int parent = (i - 1) / 2;
+        if( i % 2 == 0) {
+            p[parent]->right = cur;
+        } else {
+            p[parent]->left = cur;
+        }
+    }
+
+    delete [] p;
+
+    return head;
 }
 
 // --------- Delete a tree ---------
