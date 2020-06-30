@@ -17,6 +17,7 @@
 
 
 #include "smart_pointer_test.hpp"
+#include "common_utils.hpp"
 
 #define TEST_CHAPTER_1 0
 #define TEST_CHAPTER_2 0
@@ -29,6 +30,7 @@
 #define TEST_CHAPTER_9 0
 
 #define TEST_OTHERS 0
+
 
 int main() {
 	std::cout << "Greetings" << std::endl; // prints Greetings
@@ -47,6 +49,17 @@ int main() {
 	// Tests in chapter 9
 	C9::test_9_XX();
 #endif // TEST_CHAPTER_9
+
+    const std::string s("-3,3,-9,1,0,2,1,#,#,1,6,#,#,#,#");
+
+    namespace CU = common_utils;
+    CU::node* ptree = CU::construct_tree_from_full_tree_array(s);
+    if (ptree) {
+        CU::pre_order(ptree);
+        CU::release_tree(ptree);
+    } else {
+        std::cout << "no need to release tree\n";
+    }
 
 	return 0;
 }
