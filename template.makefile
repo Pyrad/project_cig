@@ -25,6 +25,7 @@ target_r	:=	$(BIN_DIR)/$(TAREGT_BIN)
 all_srcs	:=	$(wildcard $(sdir)/*$(FTYPE))
 build_objs	:=	$(foreach n,$(all_srcs),$(subst $(sdir),$(odir),$n))
 build_objs	:=	$(patsubst %$(FTYPE),%.o,$(build_objs))
+build_objs	:=	$(foreach obj,$(build_objs),$(subst $(cur_dir),.,$(obj)))
 
 OPT_OPTN	:=	-O2
 DEBUG_OPTN	:=	-g
@@ -36,13 +37,18 @@ BUILD_OPTIONS	:=	$(OPT_OPTN) $(DEBUG_OPTN) $(WARN_OPTN) $(MSG_OPTN) $(NO_LINK)
 
 all	: $(build_objs)
 	@echo "linked"
+	@if [[ -f $(target) ]]; then echo "$(target) exists"; rm -rf $(target); fi
+	@if [[ -L $(TAREGT_BIN) ]]; then echo "$(TAREGT_BIN) exists"; rm -rf $(TAREGT_BIN); fi
 	$(CXX) -L$(BOOST_LIB) -l$(BOOST_LNK) $^ -o $(target)
 	@echo "Create link to $(target)"
 	@ln -s $(target_r) $(TAREGT_BIN)
 
-$(cur_dir)/$(OBJ_DIR)/%.o : $(cur_dir)/$(SRC_DIR)/%.cpp
+./$(OBJ_DIR)/%.o : ./$(SRC_DIR)/%.cpp ./$(SRC_DIR)/%.hpp
 	@echo "Building (no linking)"
 	$(CXX) $(BUILD_OPTIONS) -I$(BOOST_INC) $< -o $@
+
+info:
+	@echo "build_objs: $(build_objs)"
 
 .PHONY	:	clean
 clean:
