@@ -18,50 +18,35 @@
 
 #include "smart_pointer_test.hpp"
 
+#define TEST_CHAPTER_1 0
+#define TEST_CHAPTER_2 0
+#define TEST_CHAPTER_3 0
+#define TEST_CHAPTER_4 0
+#define TEST_CHAPTER_5 0
+#define TEST_CHAPTER_6 0
+#define TEST_CHAPTER_7 0
+#define TEST_CHAPTER_8 0
+#define TEST_CHAPTER_9 0
+
+#define TEST_OTHERS 0
 
 int main() {
 	std::cout << "Greetings" << std::endl; // prints Greetings
 
-	// Tests in chapter 1
-	// Tests in chapter 2
-	// Tests in chapter 3
-	// Tests in chapter 4
-
+#if TEST_CHAPTER_5
 	// Tests in chapter 5
-	C5::test_5_1();
-	C5::test_5_2();
-	C5::test_5_3();
-	C5::test_5_4();
-	C5::test_5_5();
-	// C5::test_5_6();
-	C5::test_5_7_1();
-	C5::test_5_7_2();
-	C5::test_5_8();
-	C5::test_5_9();
-	C5::test_5_10_1();
-	C5::test_5_10_1();
-	C5::test_5_11();
-	C5::test_5_12_1();
-	C5::test_5_12_2();
-	C5::test_5_13();
-	C5::test_5_14();
-	C5::test_5_15();
-	C5::test_5_16();
-	C5::test_5_17();
-	C5::test_5_18();
-	C5::test_5_19();
-	C5::test_5_20();
-	C5::test_5_21();
-	// C5::test_5_22();
-	C5::test_5_23();
+	C5::test_5_all();
+#endif // TEST_CHAPTER_5
 
-
-
+#if TEST_OTHERS
 	// Other Tests
 	smart_pointer_test::run_smart_pointer_test();
+#endif // TEST_OTHERS
 
+#if TEST_CHAPTER_9
 	// Tests in chapter 9
 	C9::test_9_XX();
+#endif // TEST_CHAPTER_9
 
 	return 0;
 }

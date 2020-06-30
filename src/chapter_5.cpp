@@ -333,6 +333,34 @@ void test_5_23() {
 	delete a_trie;
 }
 
+void test_5_all() {
+	test_5_1();
+	test_5_2();
+	test_5_3();
+	test_5_4();
+	test_5_5();
+	// test_5_6();
+	test_5_7_1();
+	test_5_7_2();
+	test_5_8();
+	test_5_9();
+	test_5_10_1();
+	test_5_10_1();
+	test_5_11();
+	test_5_12_1();
+	test_5_12_2();
+	test_5_13();
+	test_5_14();
+	test_5_15();
+	test_5_16();
+	test_5_17();
+	test_5_18();
+	test_5_19();
+	test_5_20();
+	test_5_21();
+	// test_5_22();
+	test_5_23();
+}
 
 
 // [TIME_STAMP] Stop at
