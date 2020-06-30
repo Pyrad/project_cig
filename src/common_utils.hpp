@@ -95,6 +95,7 @@ void print_matrix(const int& r, const int& c, T** m);
 void VISIT(node* h);
 
 node* construct_tree_from_array(const int* nds, int size);
+node* construct_tree_from_full_tree_array(const std::string &str);
 
 // --------- Delete a tree ---------
 void DELETE_TREE_NODE(node* h);

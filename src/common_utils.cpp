@@ -129,6 +129,10 @@ node* construct_tree_from_array(const int* nds, int size) {
     return head;
 }
 
+node* construct_tree_from_full_tree_array(const std::string &str) {
+    return nullptr;
+}
+
 // --------- Delete a tree ---------
 void DELETE_TREE_NODE(node* h) {
     if(h) {
