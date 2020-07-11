@@ -99,6 +99,9 @@ void VISIT(node* h);
 node* construct_tree_from_array(const int* nds, int size);
 node* construct_tree_from_full_tree_array(const std::string &str);
 
+node* create_random_binary_tree(int height, int minlimit=0, int maxlimit=RAND_MAX, bool full=false);
+node* create_random_binary_tree_full(int height, int minlimit=0, int maxlimit=RAND_MAX);
+
 // --------- Delete a tree ---------
 void DELETE_TREE_NODE(node* h);
 

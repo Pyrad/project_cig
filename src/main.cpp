@@ -65,7 +65,7 @@ int main() {
     }
 
     // CU::node* phead = NORMAL::create_random_binary_tree(5, 0, 50);
-    CU::node* phead = NORMAL::create_random_binary_tree_full(5, 0, 50);
+    CU::node* phead = CU::create_random_binary_tree_full(5, 0, 50);
     std::function<void(CU::node*)> f = [](CU::node* h) {if (h) { printf("%d ", h->value); }};
     CU::pre_order(phead, f);
     printf("\n");
