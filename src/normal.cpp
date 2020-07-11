@@ -6,7 +6,7 @@ namespace NORMAL {
 
 namespace CU = common_utils;
 
-CU::node* create_random_binary_tree(int height, int minlimit, int maxlimit) {
+CU::node* create_random_binary_tree(int height, int minlimit, int maxlimit, bool full) {
     using node = CU::node;
 
     if (height <= 0) {
@@ -20,9 +20,11 @@ CU::node* create_random_binary_tree(int height, int minlimit, int maxlimit) {
     p[0] = head;
 
     for (int i = 1; i < node_num; ++i) {
-        int s = CU::gen_random_int_1(minlimit, maxlimit);
-        if (s % 2 == 0) {
-            continue;
+        if (!full) {
+            int s = CU::gen_random_int_1(minlimit, maxlimit);
+            if (s % 2 == 0) {
+                continue;
+            }
         }
 
         int parent = (i - 1) / 2;
@@ -41,6 +43,10 @@ CU::node* create_random_binary_tree(int height, int minlimit, int maxlimit) {
     delete [] p;
 
     return head;
+}
+
+CU::node* create_random_binary_tree_full(int height, int minlimit, int maxlimit) {
+    return create_random_binary_tree(height, minlimit, maxlimit, true);
 }
 
 void run_all() {
