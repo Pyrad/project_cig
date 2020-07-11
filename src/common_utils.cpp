@@ -78,7 +78,9 @@ void copy_matrix(int **from, int **to, const int row, const int col) {
 // Random digits generator
 // [a, b]
 int gen_random_int_1(const int& a, const int& b) {
-    srand((unsigned)time(NULL));
+    static unsigned cnt = 0;
+    ++cnt;
+    srand((unsigned)time(NULL) + cnt);
     return a + rand() % (b - a + 1);
 }
 // [a, b)
@@ -244,6 +246,15 @@ void post_order(node* h) {
     post_order(h->left);
     post_order(h->right);
     VISIT(h);
+}
+
+void pre_order(node* h, std::function<void(node*)> &func) {
+    if(!h) {
+        return ;
+    }
+    func(h);
+    pre_order(h->left);
+    pre_order(h->right);
 }
 
 // Clone a tree

@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 #include <deque>
+#include <iostream>
+#include <functional>
 
 namespace common_utils {
 
@@ -115,6 +117,8 @@ void pre_order(node* h) ;
 void in_order(node* h);
 
 void post_order(node* h);
+
+void pre_order(node* h, std::function<void(node*)> &func);
 
 // Clone a tree
 node* clone_tree(node* head);

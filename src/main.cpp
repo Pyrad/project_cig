@@ -19,6 +19,8 @@
 #include "smart_pointer_test.hpp"
 #include "common_utils.hpp"
 
+#include "normal.hpp"
+
 #define TEST_CHAPTER_1 0
 #define TEST_CHAPTER_2 0
 #define TEST_CHAPTER_3 0
@@ -57,9 +59,16 @@ int main() {
     if (ptree) {
         CU::pre_order(ptree);
         CU::release_tree(ptree);
+        ptree = nullptr;
     } else {
         std::cout << "no need to release tree\n";
     }
+
+    CU::node* phead = NORMAL::create_random_binary_tree(5, 0, 50);
+    std::function<void(CU::node*)> f = [](CU::node* h) {if (h) { printf("%d ", h->value); }};
+    CU::pre_order(phead, f);
+    printf("\n");
+    CU::release_tree(phead);
 
 	return 0;
 }
