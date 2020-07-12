@@ -4,6 +4,9 @@ objs/
 # Ignore binary files created at last
 bin/
 
+# Ignore temp files
+temp/
+
 # Ignore binary
 run-g
 run
