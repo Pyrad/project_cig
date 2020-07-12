@@ -296,8 +296,8 @@ void pre_order(node* h, const std::function<void(node*)> &func) {
         return ;
     }
     func(h);
-    pre_order(h->left);
-    pre_order(h->right);
+    pre_order(h->left, func);
+    pre_order(h->right, func);
 }
 
 // Tree traversal by level

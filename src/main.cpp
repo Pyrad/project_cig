@@ -52,6 +52,7 @@ int main() {
 	C9::test_9_XX();
 #endif // TEST_CHAPTER_9
 
+#if 0
     const std::string s("-3,3,-9,1,0,2,1,#,#,1,6,#,#,#,#");
 
     namespace CU = common_utils;
@@ -70,6 +71,9 @@ int main() {
     CU::pre_order(phead, f);
     printf("\n");
     CU::release_tree(phead);
+#endif // 0
+
+    NORMAL::run_all();
 
 	return 0;
 }
