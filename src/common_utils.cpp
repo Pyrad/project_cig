@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <queue>
 
 #include <boost/algorithm/string.hpp>
 
@@ -290,13 +291,35 @@ void post_order(node* h) {
     VISIT(h);
 }
 
-void pre_order(node* h, std::function<void(node*)> &func) {
+void pre_order(node* h, const std::function<void(node*)> &func) {
     if(!h) {
         return ;
     }
     func(h);
     pre_order(h->left);
     pre_order(h->right);
+}
+
+// Tree traversal by level
+void visit_tree_by_level(node* head, const std::function<void(node*)> &func) {
+	std::queue<node*> snq;
+	if(head) {
+		snq.push(head);
+	}
+	while(!snq.empty()) {
+		node* p = snq.front();
+		snq.pop();
+		if(p) {
+			//VISIT(p);
+			func(p);
+			if(p->left) {
+				snq.push(p->left);
+			}
+			if(p->right) {
+				snq.push(p->right);
+			}
+		}
+	}
 }
 
 // Clone a tree

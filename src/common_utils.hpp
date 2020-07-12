@@ -121,7 +121,10 @@ void in_order(node* h);
 
 void post_order(node* h);
 
-void pre_order(node* h, std::function<void(node*)> &func);
+void pre_order(node* h, const std::function<void(node*)> &func);
+
+// Tree traversal by level
+void visit_tree_by_level(node* head, const std::function<void(node*)> &func = std::function<void(node*)>(VISIT));
 
 // Clone a tree
 node* clone_tree(node* head);
