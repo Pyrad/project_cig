@@ -34,7 +34,7 @@ namespace CU = common_utils;
 // Issue 1
 //   Given a a random generator for 1~5, create a generator for 1~7
 int rand_1to5() {
-	return CU::gen_random_int_1(1, 5);
+	return CU::gen_random_int(1, 5);
 }
 
 
@@ -102,7 +102,7 @@ int rand_1to6_basedon_rand01p() {
 // Issue 3
 //   Given a random generator for 1~M, create a generator for 1~N
 int gen_rand_1toM(const int m) {
-	return CU::gen_random_int_1(1, m);
+	return CU::gen_random_int(1, m);
 }
 
 
@@ -397,8 +397,8 @@ void impoundingReservoir(const int n, const int k) {
 		reservoir[i] = i;
 	}
 	for(int i = k; i < n; i++) {
-		if(CU::gen_random_int_1(1, i) <= k) {
-			reservoir[CU::gen_random_int_1(1, k)] = i;
+		if(CU::gen_random_int(1, i) <= k) {
+			reservoir[CU::gen_random_int(1, k)] = i;
 		}
 	}
 }
@@ -610,7 +610,7 @@ const int max_diff_leftMax_rightMax(const std::vector<int> ivec) {
 // 	if(m_size == 1) {
 // 		return m_kvmap.begin()->first;
 // 	}
-// 	int rnum = CU::gen_random_int_1(1, m_size);
+// 	int rnum = CU::gen_random_int(1, m_size);
 // 	std::string res(m_vkmap.find(rnum)->second);
 // 	return res;
 // }
@@ -1175,7 +1175,7 @@ void print_m_numbers_in_n_length_array(const std::vector<int> &ivec, const int m
     int count = 0;
     const int len = dvec.size();
     while(count < m) {
-        int pos = CU::gen_random_int_1(0, len - count - 1);
+        int pos = CU::gen_random_int(0, len - count - 1);
         printf("%d ", ivec[pos]);
         // Swap the element in 'pos' to the end
         int tmp = dvec[pos];

@@ -407,7 +407,7 @@ getRandom() const {
 	if(m_size == 1) {
 		return m_kvmap.begin()->first;
 	}
-	int rnum = CU::gen_random_int_1(1, m_size);
+	int rnum = CU::gen_random_int(1, m_size);
 	std::string res(m_vkmap.find(rnum)->second);
 	return res;
 }

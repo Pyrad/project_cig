@@ -93,28 +93,7 @@ int gen_random_int(const int& a, const int& b, const bool left_open, const bool 
         return a + rand() % (b - a + 1);
     }
 }
-// [a, b]
-int gen_random_int_1(const int& a, const int& b) {
-    static unsigned cnt = 0;
-    ++cnt;
-    srand((unsigned)time(NULL) + cnt);
-    return a + rand() % (b - a + 1);
-}
-// [a, b)
-int gen_random_int_2(const int& a, const int& b) {
-    srand((unsigned)time(NULL));
-    return a + rand() % (b - a);
-}
-// (a, b]
-int gen_random_int_3(const int& a, const int& b) {
-    srand((unsigned)time(NULL));
-    return a + rand() % (b - a) + 1;
-}
-// (a, b)
-int gen_random_int_4(const int& a, const int& b) {
-    srand((unsigned)time(NULL));
-    return a + rand() % (b - a + 1) - 1;
-}
+
 // (0, 1)
 int gen_random_double_0to1() {
 	return rand() / (double) RAND_MAX;
@@ -194,19 +173,19 @@ node* create_random_binary_tree(int height, int minlimit, int maxlimit, bool ful
     int node_num = pow(2, height) - 1;
 
     node **p = new node*[node_num];
-    node *head = new node(gen_random_int_1(minlimit, maxlimit));
+    node *head = new node(gen_random_int(minlimit, maxlimit));
     p[0] = head;
 
     for (int i = 1; i < node_num; ++i) {
         if (!full) {
-            int s = gen_random_int_1(minlimit, maxlimit);
+            int s = gen_random_int(minlimit, maxlimit);
             if (s % 2 == 0) {
                 continue;
             }
         }
 
         int parent = (i - 1) / 2;
-        node *cur = new node(gen_random_int_1(minlimit, maxlimit));
+        node *cur = new node(gen_random_int(minlimit, maxlimit));
         p[i] = cur;
 
         if (p[parent]) {
@@ -464,7 +443,7 @@ lnode* gen_linked_list(int number) {
 
     for(int i = 0; i < number; i++) {
         sleep(1);
-        p->next = new lnode(gen_random_int_1(rand_lower, rand_upper));
+        p->next = new lnode(gen_random_int(rand_lower, rand_upper));
         p = p->next;
     }
 
