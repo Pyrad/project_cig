@@ -77,6 +77,22 @@ void copy_matrix(int **from, int **to, const int row, const int col) {
 
 
 // Random digits generator
+int gen_random_int(const int& a, const int& b, const bool left_open, const bool right_open) {
+    static unsigned cnt = 0;
+    ++cnt;
+    srand((unsigned)time(NULL) + cnt);
+    
+    if (left_open && right_open) {
+        return a + rand() % (b - a + 1) - 1;
+    } else if (left_open && !right_open) {
+        return a + rand() % (b - a) + 1;
+    } else if (!left_open && right_open) {
+        return a + rand() % (b - a);
+    } else {
+        assert(!left_open && !right_open);
+        return a + rand() % (b - a + 1);
+    }
+}
 // [a, b]
 int gen_random_int_1(const int& a, const int& b) {
     static unsigned cnt = 0;

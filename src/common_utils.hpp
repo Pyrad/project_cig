@@ -138,6 +138,7 @@ int tree_height(node* head);
 // Random digits generator
 //
 // ****************************************
+int gen_random_int(const int& a, const int& b, const bool left_open=false, const bool right_open=false);
 // [a, b]
 int gen_random_int_1(const int& a, const int& b);
 // [a, b)
