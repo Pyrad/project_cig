@@ -227,6 +227,13 @@ void print_deque(const std::deque<T>& deq) {
 
 
 
+// ****************************************
+//
+// Write a binary tree to a file in graphviz format
+//
+// ****************************************
+void write_binary_tree_to_graphviz(node *head, std::ostream &fs);
+void test_write_binary_tree_to_graphviz();
 
 
 } // namespace common_utils

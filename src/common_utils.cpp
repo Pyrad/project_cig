@@ -20,6 +20,8 @@
 #include <vector>
 #include <sstream>
 #include <queue>
+#include <fstream>
+#include <unordered_map>
 
 #include <boost/algorithm/string.hpp>
 
@@ -629,6 +631,85 @@ std::vector<std::string> convert_to_string_vector(const std::string ss[], const 
 
 
 
+void write_binary_tree_to_graphviz(node *head, std::ostream &fs) {
+    if (!head) {
+        return ;
+    }
+
+    std::unordered_map<const node*, int> m;
+    int ncnt = 0;
+
+    // When traverse through the tree, treat each node as a unique node and
+    // give it a ID number, we could distinguish different nodes by checking
+    // the pointers to them
+    auto visit_record = [&m, &ncnt](const node *h) {
+        if (m.find(h) == m.end()) {
+            // printf("Added: %p (value=%d) as node number %d\n", h, h->value, ncnt - 1);
+            m.insert(std::make_pair(h, ncnt++));
+        }
+    };
+
+    pre_order(head, visit_record);
+
+    // printf("Map has size %lu\n", m.size());
+    
+    if (!m.empty()) {
+        fs << "graph g {\n";
+    }
+
+    // For each tree node, we know it has 2 connections at most,
+    // print its children (2 at most)
+    for (const auto &kv : m) {
+        const node *pleft = kv.first->left;
+        const node *pright = kv.first->right;
+        int numleft = -1;
+        int numright = -1;
+        if (pleft) {
+            const auto itr = m.find(pleft);
+            assert(itr != m.end());
+            numleft = itr->second;
+            assert(numleft >= 0);
+        }
+        if (pright) {
+            const auto itr = m.find(pright);
+            assert(itr != m.end());
+            numright = itr->second;
+            assert(numright >= 0);
+        }
+
+        const int numcur = kv.second;
+        if (numleft > 0) {
+            // printf("N%d--N%d;\n", numcur, numleft);
+            fs << "N" << numcur << "--N" << numleft << ";\n";
+        }
+        if (numright > 0) {
+            // printf("N%d--N%d;\n", numcur, numright);
+            fs << "N" << numcur << "--N" << numright << ";\n";
+        }
+    }
+
+    // Write node information
+    for (const auto &kv : m) {
+        // printf("N%d[label=\"%d\"];\n", kv.second, kv.first->value);
+        fs << "N" << kv.second << "[label=\"" << kv.first->value << "\"];\n";
+    }
+
+    if (!m.empty()) {
+        fs << "}\n";
+    }
+}
+
+void test_write_binary_tree_to_graphviz() {
+    node* phead = create_random_binary_tree_full(5, 0, 50);
+    std::function<void(node*)> f = [](node* h) {if (h) { printf("%d ", h->value); }};
+    pre_order(phead, f);
+    printf("\n");
+    std::fstream fs("./temp/graphtest.dot", std::fstream::out);
+    // write_binary_tree_to_graphviz(phead);
+    write_binary_tree_to_graphviz(phead, fs);
+    fs.close();
+    release_tree(phead);
+}
 
 
 
