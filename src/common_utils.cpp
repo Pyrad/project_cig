@@ -721,6 +721,13 @@ void test_write_binary_tree_to_graphviz() {
 
 
 
+// Initialization for static members
+// in ColorTermString class
+std::string ColorTermString::blue{"\033[38;0;39m"};
+std::string ColorTermString::green{"\033[38;5;76m"};
+std::string ColorTermString::yellow{"\033[38;0;33m"};
+std::string ColorTermString::red{"033[38;0;31m"};
+std::string ColorTermString::nocolor{"\033[0m"};
 
 
 

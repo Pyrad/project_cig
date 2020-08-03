@@ -236,6 +236,56 @@ void write_binary_tree_to_graphviz(node *head, std::ostream &fs);
 void test_write_binary_tree_to_graphviz();
 
 
+// ****************************************
+//
+// A helper class to get strings for different
+// colors to show in terminals
+//
+// ****************************************
+class ColorTermString {
+public:
+    template< typename... Args >
+    static std::string string_sprintf( const char* format, Args... args ) {
+        int length = std::snprintf( nullptr, 0, format, args... );
+        assert( length >= 0 );
+
+        char* buf = new char[length + 1];
+        std::snprintf( buf, length + 1, format, args... );
+
+        std::string str( buf );
+        delete[] buf;
+        return str;
+    }
+public:
+    static std::string info() {
+        static std::string infoprefix{
+            string_sprintf("[%sINFO%s]", green.c_str(), nocolor.c_str())
+        };
+        return infoprefix;
+    }
+
+    static std::string warning() {
+        static std::string infoprefix{
+            string_sprintf("[%sWARNING%s]", yellow.c_str(), nocolor.c_str())
+        };
+        return infoprefix;
+    }
+
+    static std::string error() {
+        static std::string infoprefix{
+            string_sprintf("[%sERROR%s]", red.c_str(), nocolor.c_str())
+        };
+        return infoprefix;
+    }
+
+private:
+    static std::string blue;
+    static std::string green;
+    static std::string yellow;
+    static std::string red;
+    static std::string nocolor;
+};
+
 } // namespace common_utils
 
 

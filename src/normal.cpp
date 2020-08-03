@@ -28,13 +28,24 @@ void test_write_binary_tree_to_graphviz() {
     std::string dirname("temp");
     BF::path dpath(dirname.c_str());
     if (BF::is_directory(dpath)) {
-        printf("%s is a directory\n", dirname.c_str());
+        std::string infoPrefix(CU::ColorTermString::info());
+        // printf("%s is a directory\n", dirname.c_str());
+        printf("%s %s is a directory\n", infoPrefix.c_str(), dirname.c_str());
     } else {
-        printf("%s is not a directory or doesn't exist\n", dirname.c_str());
+        std::string warningPrefix(CU::ColorTermString::warning());
+        // printf("%s is not a directory or doesn't exist\n", dirname.c_str());
+        printf("%s %s is not a directory or doesn't exist\n", warningPrefix.c_str(), dirname.c_str());
+        printf("Try to create directory: %s ...", dirname.c_str());
+        if (BF::create_directory(dpath)) {
+            printf("Succeed\n");
+        } else {
+            printf("Failed\n");
+            return ;
+        }
     }
     std::fstream fs("./temp/graphtest.dot", std::fstream::out);
     if (!fs.is_open()) {
-        printf("Error to open file for writing: ./temp/graphtest.dot");
+        printf("Error to open file for writing: ./temp/graphtest.dot\n");
         return ;
     }
     // write_binary_tree_to_graphviz(phead);
