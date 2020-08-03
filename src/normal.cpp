@@ -23,6 +23,10 @@ void test_write_binary_tree_to_graphviz() {
     CU::pre_order(phead, f);
     printf("\n");
     std::fstream fs("./temp/graphtest.dot", std::fstream::out);
+    if (!fs.is_open()) {
+        printf("Error to open file for writing: ./temp/graphtest.dot");
+        return ;
+    }
     // write_binary_tree_to_graphviz(phead);
     CU::write_binary_tree_to_graphviz(phead, fs);
     fs.close();

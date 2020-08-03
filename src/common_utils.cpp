@@ -654,7 +654,8 @@ void write_binary_tree_to_graphviz(node *head, std::ostream &fs) {
     // printf("Map has size %lu\n", m.size());
     
     if (!m.empty()) {
-        fs << "graph g {\n";
+        fs << "digraph g {\n";
+        fs << "node [shape=record,height=.1]\n";
     }
 
     // For each tree node, we know it has 2 connections at most,
@@ -680,18 +681,21 @@ void write_binary_tree_to_graphviz(node *head, std::ostream &fs) {
         const int numcur = kv.second;
         if (numleft > 0) {
             // printf("N%d--N%d;\n", numcur, numleft);
-            fs << "N" << numcur << "--N" << numleft << ";\n";
+            // fs << "N" << numcur << "--N" << numleft << ";\n";
+            fs << "\"N" << numcur << "\":f0 -> \"N" << numleft << "\":f1;\n";
         }
         if (numright > 0) {
             // printf("N%d--N%d;\n", numcur, numright);
-            fs << "N" << numcur << "--N" << numright << ";\n";
+            // fs << "N" << numcur << "--N" << numright << ";\n";
+            fs << "\"N" << numcur << "\":f2 -> \"N" << numright << "\":f1;\n";
         }
     }
 
     // Write node information
     for (const auto &kv : m) {
         // printf("N%d[label=\"%d\"];\n", kv.second, kv.first->value);
-        fs << "N" << kv.second << "[label=\"" << kv.first->value << "\"];\n";
+        // fs << "N" << kv.second << "[label=\"" << kv.first->value << "\"];\n";
+        fs << "N" << kv.second << "[label=\"<f0> | <f1> " << kv.first->value << " | <f2> \"];\n";
     }
 
     if (!m.empty()) {
