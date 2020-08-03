@@ -9,7 +9,7 @@ FTYPE	:=	.cpp
 
 BOOST_INC	:=	<__BOOST_INC_TO_FILL__>
 BOOST_LIB	:=	<__BOOST_LIB_TO_FILL__>
-BOOST_LNK	:=	boost_regex
+BOOST_LNK	:=	boost_regex boost_filesystem
 
 CXX	:=	<__CXX_TO_FILL>
 
@@ -23,9 +23,12 @@ target		:=	$(cur_dir)/$(BIN_DIR)/$(TAREGT_BIN)
 target_r	:=	$(BIN_DIR)/$(TAREGT_BIN)
 
 all_srcs	:=	$(wildcard $(sdir)/*$(FTYPE))
+all_srcs_relative	:=	$(foreach n,$(all_srcs),$(subst $(cur_dir),.,$n))
 build_objs	:=	$(foreach n,$(all_srcs),$(subst $(sdir),$(odir),$n))
 build_objs	:=	$(patsubst %$(FTYPE),%.o,$(build_objs))
 build_objs	:=	$(foreach obj,$(build_objs),$(subst $(cur_dir),.,$(obj)))
+
+LINK_LIBS	:=	$(foreach n,$(BOOST_LNK),$(subst $n,-l$n,$n))
 
 OPT_OPTN	:=	-O2
 DEBUG_OPTN	:=	-g
@@ -38,17 +41,35 @@ BUILD_OPTIONS	:=	$(OPT_OPTN) $(DEBUG_OPTN) $(WARN_OPTN) $(MSG_OPTN) $(NO_LINK)
 all	: $(build_objs)
 	@echo "linked"
 	@if [[ -f $(target) ]]; then echo "$(target) exists"; rm -rf $(target); fi
-	@if [[ -L $(TAREGT_BIN) ]]; then echo "$(TAREGT_BIN) exists"; rm -rf $(TAREGT_BIN); fi
-	$(CXX) -L$(BOOST_LIB) -l$(BOOST_LNK) $^ -o $(target)
+	@if [[ -L $(TAREGT_BIN) ]]; then echo "./$(TAREGT_BIN) exists"; rm -rf $(TAREGT_BIN); fi
+	$(CXX) -std=c++11 -L$(BOOST_LIB) -o $(target) $^ $(LINK_LIBS)
 	@echo "Create link to $(target)"
 	@ln -s $(target_r) $(TAREGT_BIN)
 
-./$(OBJ_DIR)/%.o : ./$(SRC_DIR)/%.cpp ./$(SRC_DIR)/%.hpp
+./$(OBJ_DIR)/%.o : ./$(SRC_DIR)/%.cpp
 	@echo "Building (no linking)"
-	$(CXX) $(BUILD_OPTIONS) -I$(BOOST_INC) $< -o $@
+	@#$(CXX) -std=c++11 $(BUILD_OPTIONS) -I$(BOOST_INC) $< -o $@
+	g++ -I$(BOOST_INC) $(BUILD_OPTIONS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
+
+one	:
+	@# This will build all sources and link them all in one step
+	@if [[ -f $(target) ]]; then echo "$(target) exists"; rm -rf $(target); fi
+	@if [[ -L $(TAREGT_BIN) ]]; then echo "./$(TAREGT_BIN) exists"; rm -rf $(TAREGT_BIN); fi
+	g++ -std=c++11 $(all_srcs_relative) -o $(target) -L$(BOOST_LIB) -I$(BOOST_INC) $(LINK_LIBS)
+	@echo "Create link to $(target)"
+	@ln -s $(target_r) $(TAREGT_BIN)
+
+linktest	: $(build_objs)
+	/usr/bin/g++ -std=c++11 $(build_objs) \
+            -L/home/pyrad/procs/boost_1_73_0/lib \
+            -o /home/pyrad/worksrc/github/project_cig/bin/run-g \
+            -lboost_filesystem
 
 info:
 	@echo "build_objs: $(build_objs)"
+	@echo "Linked libs:" $(LINK_LIBS)
+	@echo "all_srcs_relative:" $(all_srcs_relative)
+
 
 .PHONY	:	clean
 clean:
