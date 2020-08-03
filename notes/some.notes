@@ -1,0 +1,6 @@
+1. Plot binary tree
+  https://blog.csdn.net/hackooo/article/details/10564049
+  https://blog.csdn.net/copica/article/details/39291141
+
+2. Plot binary tree with GraphViz
+   Use "digraph" instead of "graph"
