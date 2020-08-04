@@ -13,6 +13,7 @@
 #include <deque>
 #include <iostream>
 #include <functional>
+#include <cassert>
 
 namespace common_utils {
 
