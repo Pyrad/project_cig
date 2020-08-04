@@ -4,3 +4,11 @@
 
 2. Plot binary tree with GraphViz
    Use "digraph" instead of "graph"
+
+3. Use Valgrind to check memory issues
+   (1) First need to make sure the valgrind is installed
+   sudo apt-get install valgrind
+   (2) Use command below, here <PROGRAM_BINARY> is the executable
+       bianry file of the program to test
+   valgrind --tool=memcheck --leak-check=full <PROGRAM_BINARY> 2>&1 | tee v.log
+

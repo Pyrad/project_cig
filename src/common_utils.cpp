@@ -175,6 +175,17 @@ node* create_random_binary_tree(int height, int minlimit, int maxlimit, bool ful
     int node_num = pow(2, height) - 1;
 
     node **p = new node*[node_num];
+    /*
+     * !!! BE VERY CAREFUL HERE !!!
+     * Pointer array must be initializated just in case
+     * of use before initialization, otherwise the so 
+     * called "wild" pointer will be encountered and a
+     * segment fault error will happen !!!
+     *
+     * Alternative: use std::vector<node*> instead !
+     */
+    std::fill(p, p+node_num, nullptr);
+
     node *head = new node(gen_random_int(minlimit, maxlimit));
     p[0] = head;
 
@@ -212,6 +223,7 @@ node* create_random_binary_tree_full(int height, int minlimit, int maxlimit) {
 void DELETE_TREE_NODE(node* h) {
     if(h) {
         delete h;
+        h = nullptr;
     }
 }
 

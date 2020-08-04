@@ -30,15 +30,15 @@ void test_3_6() {
     constexpr int TEST_TIMES = 10;
     using namespace std::placeholders;
 
-    auto delptr = std::bind(CU::release_tree, _1, 99);
     std::function<void(node*)> f = [](node* h) {if (h) { printf("%d ", h->value); }};
+    auto delptr = std::bind(CU::release_tree, _1, 99);
     for (int i = 0; i < TEST_TIMES; ++i) {
         printf("Tree %d: ", i);
         std::shared_ptr<node> sp(CU::create_random_binary_tree(5, -50, 50), delptr);
         CU::pre_order(sp.get(), f);
+        printf("\nTree %d done\n", i);
     }
-    // CU::node* phead = CU::create_random_binary_tree(5, -50, 50);
-    // CU::release_tree(phead);
-}
+
+} // end of test_3_6()
 
 } // namespace C3TEST

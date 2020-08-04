@@ -25,6 +25,7 @@ namespace common_utils {
 // Binary tree node definition
 class binary_tree_node {
 public:
+    binary_tree_node(): left(NULL), right(NULL), value(0) { }
     binary_tree_node(int v): left(NULL), right(NULL), value(v) { }
     ~binary_tree_node() { }
 

@@ -14,7 +14,7 @@ namespace NORMAL {
 namespace CU = common_utils;
 
 void run_all() {
-    test_write_binary_tree_to_graphviz();
+    // test_write_binary_tree_to_graphviz();
 }
 
 void test_write_binary_tree_to_graphviz() {
