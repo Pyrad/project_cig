@@ -21,7 +21,7 @@ void test_write_binary_tree_to_graphviz() {
     using node = CU::node;
     namespace BF = boost::filesystem;
     // node* phead = create_random_binary_tree_full(5, 0, 50);
-    node* phead = CU::create_random_binary_tree(5, 0, 50);
+    node* phead = CU::create_random_binary_tree(5, -50, 50);
     std::function<void(node*)> f = [](node* h) {if (h) { printf("%d ", h->value); }};
     CU::pre_order(phead, f);
     printf("\n");
