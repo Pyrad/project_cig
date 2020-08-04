@@ -227,6 +227,13 @@ void print_deque(const std::deque<T>& deq) {
 }
 
 
+// ****************************************
+//
+// File system related stuffs
+//
+// ****************************************
+bool get_dir(const std::string &dirname, const bool create=true);
+
 
 
 // ****************************************
@@ -286,7 +293,7 @@ private:
     static std::string yellow;
     static std::string red;
     static std::string nocolor;
-};
+}; // end of class ColorTermString
 
 } // namespace common_utils
 

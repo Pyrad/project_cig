@@ -24,6 +24,7 @@
 #include <unordered_map>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 #include "common_utils.hpp"
 
@@ -645,6 +646,40 @@ std::vector<std::string> convert_to_string_vector(const std::string ss[], const 
 }
 
 
+/**
+ * Check if a directory exists, create it if not (default
+ * behavoir), if "create" is false, just return with creating
+ * it if it doesn't exist
+ */
+bool get_dir(const std::string &dirname, const bool create) {
+    namespace BF = boost::filesystem;
+    BF::path dpath(dirname.c_str());
+    if (!BF::is_directory(dpath)) {
+        std::string warningPrefix(ColorTermString::warning());
+        printf("%s %s is not a directory or doesn't exist\n", warningPrefix.c_str(), dirname.c_str());
+
+        if (!create) {
+            printf("%s Specified not to create directory: %s\n", warningPrefix.c_str(), dirname.c_str());
+            return false;
+        }
+
+        printf("Try to create directory: %s ...", dirname.c_str());
+        if (BF::create_directory(dpath)) {
+            printf("Succeed\n");
+        } else {
+            printf("Failed\n");
+            return false;
+        }
+    }
+#if 0
+    else {
+        std::string infoPrefix(ColorTermString::info());
+        printf("%s %s is a directory\n", infoPrefix.c_str(), dirname.c_str());
+    }
+#endif // 0
+
+    return true;
+}
 
 void write_binary_tree_to_graphviz(node *head, std::ostream &fs) {
     if (!head) {
