@@ -227,13 +227,15 @@ void DELETE_TREE_NODE(node* h) {
     }
 }
 
-void pre_order_release(node* h) {
+void pre_order_release(node *h) {
     if(!h) {
         return ;
     }
+    node *leftChild = h->left;
+    node *rightChild = h->right;
     DELETE_TREE_NODE(h);
-    pre_order_release(h->left);
-    pre_order_release(h->right);
+    pre_order_release(leftChild);
+    pre_order_release(rightChild);
 }
 
 void in_order_release(node* h) {
@@ -241,8 +243,9 @@ void in_order_release(node* h) {
         return ;
     }
     in_order_release(h->left);
+    node *rightChild = h->right;
     DELETE_TREE_NODE(h);
-    in_order_release(h->right);
+    in_order_release(rightChild);
 }
 
 void post_order_release(node* h) {
