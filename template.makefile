@@ -30,7 +30,7 @@ build_objs	:=	$(foreach obj,$(build_objs),$(subst $(cur_dir),.,$(obj)))
 
 LINK_LIBS	:=	$(foreach n,$(BOOST_LNK),$(subst $n,-l$n,$n))
 
-OPT_OPTN	:=	-O2
+OPT_OPTN	:=
 DEBUG_OPTN	:=	-g
 WARN_OPTN	:=	-Wall
 MSG_OPTN	:=	-fmessage-length=0
