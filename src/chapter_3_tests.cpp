@@ -35,7 +35,8 @@ void test_3_4() {
     //-9 
     std::string serialstr_0("-9!#!#!");
     //43 -27 -41 -36 24 50 13 -25 
-    std::string serialstr_1("43!-27!-41!-36!#!#!24!50!#!#!13!#!#!#!-25!#!#!");
+    // std::string serialstr_1("43!-27!-41!-36!#!#!24!50!#!#!13!#!#!#!-25!#!#!");
+    std::string serialstr_1("43!-27!0!10!#!#!4!6!#!#!13!#!#!#!-25!#!#!");
     //-46 1 12 47 10 -40 50 50 21 -30 17 -39 
     std::string serialstr_2("-46!1!12!#!#!47!#!10!#!-40!#!#!50!50!#!#!21!-30!17!#!#!#!-39!#!#!");
     //25 -5 -31 
@@ -60,12 +61,43 @@ void test_3_4() {
 
     std::function<void(node*)> f = [](node* h) {if (h) { printf("%d ", h->value); }};
     int i = 0;
+    const std::string fprefix("graphvizFile");
+    const std::string fsuffix(".dot");
+
+    // Write to folder of "./temp"
+    const std::string tmpdir("temp");
+    // CU::get_dir will print message if not to create it (only in case it doesn't exist)
+    if (!CU::get_dir(tmpdir)) {
+        return ;
+    }
+
     for (auto s : strs) {
         CU::node *phead = C3::deserialization_to_create_binary_tree_process(s);
-        printf("Tree %d: ", i++);
+        printf("Tree %d: ", i);
         CU::pre_order(phead, f);
         printf("\n");
+
+        const std::string fname(tmpdir + "/" + fprefix + "." + std::to_string(i) + fsuffix);
+        std::fstream fs(fname.c_str(), std::fstream::out);
+        if (!fs.is_open()) {
+            printf("%s Failed to open file for writing: %s\n",
+                    CU::ColorTermString::warning().c_str(),
+                    fname.c_str());
+            return ;
+        }
+
+        if (i == 1) {
+            int maxpath = C3::max_certain_sum_path_in_binary_tree(phead, 10);
+            printf("Max path is: %d\n", maxpath);
+        }
+
+        printf("%s Write to file: %s ...", CU::ColorTermString::info().c_str(), fname.c_str());
+        CU::write_binary_tree_to_graphviz(phead, fs);
+        printf("Done");
+        fs.close();
+
         CU::release_tree(phead);
+        ++i;
     }
 
 }
