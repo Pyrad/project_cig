@@ -347,12 +347,23 @@ CU::node* deserialization_to_create_binary_tree_process(std::string& str) {
 	// If serialization is correct and if this node is NULL
 	// if then str[0] should be '#' instantly
 	if(str[0] == '#') {
+        // before returning, should remove
+        // the character and next character,
+        // since they are "#!", which represents
+        // an empty node
+        assert(str[1] == '!'); // next one must be '!'
+        str.erase(0, 2); // erase first 2 chars
 		return NULL;
 	}
 
+    bool neg = false;
+    if (str[0] == '-') {
+        neg = true;
+    }
+
 	int res = 0;
-	int len = 0;
-	for(std::size_t i = 0; i < str.size(); i++) {
+	int len = (neg ? 1 : 0);
+	for(std::size_t i = (neg ? 1 : 0); i < str.size(); i++) {
 		if(str[i] == '!') {
 			break;
 		}
@@ -361,8 +372,8 @@ CU::node* deserialization_to_create_binary_tree_process(std::string& str) {
 		len++;
 	}
 
-	str.erase(0, len);
-	CU::node* p = new CU::node(res);
+	str.erase(0, len + 1);
+	CU::node* p = new CU::node(neg ? -res : res);
 
 	p->left = deserialization_to_create_binary_tree_process(str);
 	p->right = deserialization_to_create_binary_tree_process(str);

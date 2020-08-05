@@ -16,6 +16,9 @@ namespace C3TEST {
 
 void test_3_all();
 
+// [TIME_STAMP] Start at 10:13, 2020/08/05
+void test_3_4();
+
 // [TIME_STAMP] Start at 10:34, 2020/08/04
 void test_3_6();
 
