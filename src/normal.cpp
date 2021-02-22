@@ -52,7 +52,8 @@ void test_write_binary_tree_to_graphviz() {
     CU::write_binary_tree_to_graphviz(phead, fs);
     fs.close();
     CU::release_tree(phead);
-}
+
+} // test_write_binary_tree_to_graphviz
 
 } // End of namespace NORMAL
 
