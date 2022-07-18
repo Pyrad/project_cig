@@ -8,6 +8,7 @@
 #include <fstream>
 
 #include <boost/filesystem.hpp>
+#include <vector>
 
 namespace NORMAL {
 
@@ -15,6 +16,7 @@ namespace CU = common_utils;
 
 void run_all() {
     // test_write_binary_tree_to_graphviz();
+    trivial_test();
 }
 
 void test_write_binary_tree_to_graphviz() {
@@ -54,6 +56,30 @@ void test_write_binary_tree_to_graphviz() {
     CU::release_tree(phead);
 
 } // test_write_binary_tree_to_graphviz
+
+void trivial_test() {
+    std::vector<int> loc_vec{ -1, 0, 1 };
+    std::vector<int> narg_vec{ -1, 0, 1 };
+
+    int cnt = 0;
+
+    for (const int loc : loc_vec) {
+        for (const int narg : narg_vec) {
+            if ((loc == -1) ? -1 : narg) {
+                printf("[%d] Yes (loc=%d, narg=%d)\n", cnt, loc, narg);
+            } else {
+                printf("[%d] No  (loc=%d, narg=%d)\n", cnt, loc, narg);
+            }
+            if ((loc == -1) ? true : (narg != 0)) {
+                printf("[%d] Yes (loc=%d, narg=%d)\n", cnt, loc, narg);
+            } else {
+                printf("[%d] No  (loc=%d, narg=%d)\n", cnt, loc, narg);
+            }
+            printf("----\n");
+            ++cnt;
+        }
+    }
+}
 
 } // End of namespace NORMAL
 
